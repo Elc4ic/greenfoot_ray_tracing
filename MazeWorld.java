@@ -15,6 +15,11 @@ public class MazeWorld extends WorldBase {
 //        super(hero);
         maze.printMap();
         try {
+            Texture wallTexture = new Texture("D:\\C_project\\Raytracer\\images\\wall.png");
+            Texture flagTexture = new Texture("D:\\C_project\\Raytracer\\images\\flag.png");
+            textureCollection.addTexture(wallTexture);
+            textureCollection.addTexture(flagTexture);
+
             for (int y = 0; y < map.length; y++) {
                 for (int x = 0; x < map[y].length; x++) {
                     if (map[y][x] == 0) {
@@ -23,8 +28,8 @@ public class MazeWorld extends WorldBase {
                                 1.5f,
                                 ColorOperation.GColorToInt(new Color(0, 0, 0)),
                                 "D:\\C_project\\Raytracer\\models\\block.obj",
-                                0, true,
-                                "D:\\C_project\\Raytracer\\images\\wall.png"
+                                true,
+                                textureCollection.getIndex(wallTexture)
                         ));
                     }
                     if (map[y][x] == 2) {
@@ -35,8 +40,8 @@ public class MazeWorld extends WorldBase {
                                 0.2f,
                                 ColorOperation.GColorToInt(new Color(0, 0, 0)),
                                 "D:\\C_project\\Raytracer\\models\\flag.obj",
-                                0, true,
-                                "D:\\C_project\\Raytracer\\images\\flag.png"
+                                true,
+                                textureCollection.getIndex(flagTexture)
                         );
                         setWinShape(w);
                         getObjects().add(w);

@@ -1,6 +1,3 @@
-import javax.imageio.ImageIO;
-import java.awt.image.BufferedImage;
-import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -10,17 +7,11 @@ import java.util.List;
 public class ObjFile extends WorldObject {
 
     private final List<float[]> vertices = new ArrayList<>();
-    private final List<Integer> leafIndices = new ArrayList<>();
     private final List<float[]> texCoords = new ArrayList<>();
+    private final List<Integer> leafIndices = new ArrayList<>();
     private final List<float[]> cache = new ArrayList<>();
-    private final List<float[]> bvhBounds = new ArrayList<>();
-    private final List<int[]> bvhNodes = new ArrayList<>();
+    private final List<float[]> bounds = new ArrayList<>();
     List<int[]> faces = new ArrayList<>();
-
-    public static final int BVH_NODE_SIZE = 3;
-    public static final int BVH_NODE_IS_LEAF = 0;
-    public static final int BVH_NODE_LEFT_OR_FIRST = 1;
-    public static final int BVH_NODE_RIGHT_FACE_COUNT = 2;
 
     public static final int BVH_BOUND_SIZE = 6;
     public static final int BVH_BOUND_MIN_X = 0;
@@ -39,7 +30,7 @@ public class ObjFile extends WorldObject {
     public static final int VERTEX_Y = 1;
     public static final int VERTEX_Z = 2;
 
-    public static final int FACE_SIZE = 7;
+    public static final int FACE_SIZE = 6;
     public static final int VERTEX_1_INDEX = 0;
     public static final int VERTEX_2_INDEX = 1;
     public static final int VERTEX_3_INDEX = 2;
@@ -48,47 +39,42 @@ public class ObjFile extends WorldObject {
     public static final int TEXTURE_COORD_3_INDEX = 5;
 
     public static final int CACHE_SIZE = 13;
-    public static final int EDGE_1_X_INDEX = 0;
-    public static final int EDGE_1_Y_INDEX = 0;
-    public static final int EDGE_1_Z_INDEX = 0;
-    public static final int EDGE_2_X_INDEX = 0;
-    public static final int EDGE_2_Y_INDEX = 0;
-    public static final int EDGE_2_Z_INDEX = 0;
-    public static final int NORMAL_X_INDEX = 0;
-    public static final int NORMAL_Y_INDEX = 0;
-    public static final int NORMAL_Z_INDEX = 0;
-    public static final int D00_INDEX = 0;
-    public static final int D01_INDEX = 0;
-    public static final int D11_INDEX = 0;
-    public static final int DENOMINATOR = 0;
+    public static final int EDGE_1_X = 0;
+    public static final int EDGE_1_Y = 1;
+    public static final int EDGE_1_Z = 2;
+    public static final int EDGE_2_X = 3;
+    public static final int EDGE_2_Y = 4;
+    public static final int EDGE_2_Z = 5;
+    public static final int NORMAL_X = 6;
+    public static final int NORMAL_Y = 7;
+    public static final int NORMAL_Z = 8;
+    public static final int D00 = 9;
+    public static final int D01 = 10;
+    public static final int D11 = 11;
+    public static final int DENOMINATOR = 12;
 
     public static final int SIZES_SIZE = 7;
     public static final int VERTEX_OFFSET = 0;
     public static final int TEXT_COORD_OFFSET = 1;
     public static final int LEAFS_OFFSET = 2;
-    public static final int NODES_OFFSET = 3;
+    public static final int FACE_COUNT_OFFSET = 3;
     public static final int TEXTURE_OFFSET = 4;
     public static final int TEXTURE_WIDTH = 5;
     public static final int TEXTURE_HEIGHT = 6;
 
-    int[] textureBuff;
-    int textureWidth, textureHeight;
-
-    private Box box;
     private float scale;
     private float[] pos;
     private boolean hasTexture;
-    private BufferedImage texture;
+    int textureIndex;
 
-    public ObjFile(float[] pos, float scale, int color, String filePath, int depth, boolean hasTexture, String texturePath) throws IOException {
+    public ObjFile(float[] pos, float scale, int color, String filePath, boolean hasTexture, int textureIndex) throws IOException {
         super(color);
         this.pos = pos;
         this.scale = scale;
         this.hasTexture = hasTexture;
 
         if (hasTexture) {
-            this.texture = ImageIO.read(new File(texturePath));
-            fillTextureBuff(texture);
+            this.textureIndex = textureIndex;
         }
 
         float minX = Float.POSITIVE_INFINITY, minY = Float.POSITIVE_INFINITY, minZ = Float.POSITIVE_INFINITY;
@@ -130,7 +116,14 @@ public class ObjFile extends WorldObject {
                 faces.add(face);
             }
         }
+        bounds.add(new float[]{minX, minY, minZ});
+        bounds.add(new float[]{maxX, maxY, maxZ});
 
+        serialize(faces);
+        faces.clear();
+    }
+
+    public void serialize(List<int[]> faces) {
         List<Face> faceList = new ArrayList<>();
         for (int[] f : faces) {
             if (f.length == 6) {
@@ -140,59 +133,24 @@ public class ObjFile extends WorldObject {
                 faceList.add(new Face(f[0], f[2], f[3], f[4], f[6], f[7]));
             }
         }
-        box = new Box(
-                new float[]{minX, minY, minZ},
-                new float[]{maxX, maxY, maxZ}
-        );
-        box.boxFaces.addAll(faceList);
-        box.split(depth, box.boxFaces);
-        serialize(box);
-
-        faces.clear();
-        faceList.clear();
-    }
-
-    public int serialize(Box node) {
-
-        bvhBounds.add(node.min);
-        bvhBounds.add(node.max);
-        bvhNodes.add(new int[]{0, 0, 0});
-        int currentIndex = bvhNodes.size() - 1;
-
-        if (node.leftChild == null && node.rightChild == null) {
-            int startFaceIndex = leafIndices.size() / 6;
-            for (Face face : node.boxFaces) {
-                leafIndices.add(face.v0);
-                leafIndices.add(face.v1);
-                leafIndices.add(face.v2);
-                leafIndices.add(face.t0);
-                leafIndices.add(face.t1);
-                leafIndices.add(face.t2);
-                cache.add(new float[]{
-                        face.edge0[0], face.edge0[1], face.edge0[2],
-                        face.edge1[0], face.edge1[1], face.edge1[2],
-                        face.normal[0], face.normal[1], face.normal[2],
-                        face.d00, face.d01, face.d11, face.denominator}
-                );
-            }
-            int faceCount = node.boxFaces.size();
-            int[] bhvLeaf = new int[]{1, startFaceIndex, faceCount};
-            bvhNodes.set(currentIndex, bhvLeaf);
-        } else {
-            int leftIndex = (node.leftChild == null) ? -1 : serialize(node.leftChild);
-            int rightIndex = (node.rightChild == null) ? -1 : serialize(node.rightChild);
-            int[] bhvNode = new int[]{0, leftIndex, rightIndex};
-            bvhNodes.set(currentIndex, bhvNode);
+        for (Face face : faceList) {
+            leafIndices.add(face.v0);
+            leafIndices.add(face.v1);
+            leafIndices.add(face.v2);
+            leafIndices.add(face.t0);
+            leafIndices.add(face.t1);
+            leafIndices.add(face.t2);
+            cache.add(new float[]{
+                    face.edge0[0], face.edge0[1], face.edge0[2],
+                    face.edge1[0], face.edge1[1], face.edge1[2],
+                    face.normal[0], face.normal[1], face.normal[2],
+                    face.d00, face.d01, face.d11, face.denominator}
+            );
         }
-        return currentIndex;
     }
 
     public int getVertexSize() {
         return vertices.size();
-    }
-
-    public int getTextureSize() {
-        return textureBuff.length;
     }
 
     public int getTextureCoordSize() {
@@ -203,19 +161,29 @@ public class ObjFile extends WorldObject {
         return leafIndices.size();
     }
 
-    public int getBvhNodesSize() {
-        return bvhNodes.size();
+    public int getFaceCount() {
+        return leafIndices.size() / 6;
     }
 
-    private void fillTextureBuff(BufferedImage texture) {
-        this.textureWidth = texture.getWidth();
-        this.textureHeight = texture.getHeight();
-        this.textureBuff = new int[textureWidth * textureHeight];
-        for (int i = 0; i < textureHeight; i++) {
-            for (int j = 0; j < textureWidth; j++) {
-                textureBuff[i * textureWidth + j] = texture.getRGB(j, i);
-            }
+    public float[] getCacheBuff() {
+        float[] cacheBuff = new float[cache.size() * CACHE_SIZE];
+        for (int i = 0; i < cache.size(); i++) {
+            int ii = i * CACHE_SIZE;
+            cacheBuff[ii] = cache.get(i)[0];
+            cacheBuff[ii + 1] = cache.get(i)[1];
+            cacheBuff[ii + 2] = cache.get(i)[2];
+            cacheBuff[ii + 3] = cache.get(i)[3];
+            cacheBuff[ii + 4] = cache.get(i)[4];
+            cacheBuff[ii + 5] = cache.get(i)[5];
+            cacheBuff[ii + 6] = cache.get(i)[6];
+            cacheBuff[ii + 7] = cache.get(i)[7];
+            cacheBuff[ii + 8] = cache.get(i)[8];
+            cacheBuff[ii + 9] = cache.get(i)[9];
+            cacheBuff[ii + 10] = cache.get(i)[10];
+            cacheBuff[ii + 11] = cache.get(i)[11];
+            cacheBuff[ii + 12] = cache.get(i)[12];
         }
+        return cacheBuff;
     }
 
     public float[] getVerticesBuff() {
@@ -247,28 +215,15 @@ public class ObjFile extends WorldObject {
         return leafIndicesBuff;
     }
 
-    public float[] getBvhBoundsBuff() {
-        float[] bvhBoundsBuff = new float[bvhBounds.size() * 3];
-        for (int i = 0; i < bvhBounds.size(); i++) {
+    public float[] getBoundsBuff() {
+        float[] bvhBoundsBuff = new float[bounds.size() * 3];
+        for (int i = 0; i < bounds.size(); i++) {
             int ii = i * 3;
-            bvhBoundsBuff[ii] = bvhBounds.get(i)[0];
-            bvhBoundsBuff[ii + 1] = bvhBounds.get(i)[1];
-            bvhBoundsBuff[ii + 2] = bvhBounds.get(i)[2];
+            bvhBoundsBuff[ii] = bounds.get(i)[0];
+            bvhBoundsBuff[ii + 1] = bounds.get(i)[1];
+            bvhBoundsBuff[ii + 2] = bounds.get(i)[2];
         }
         return bvhBoundsBuff;
-    }
-
-    public int[] getBvhNodesBuff() {
-        int[] bvhNodesBuff = new int[bvhNodes.size() * ObjFile.BVH_NODE_SIZE];
-        for (int i = 0; i < bvhNodes.size(); i++) {
-            int ii = i * 3;
-            bvhNodesBuff[ii] = bvhNodes.get(i)[0];
-            bvhNodesBuff[ii + 1] = bvhNodes.get(i)[1];
-            bvhNodesBuff[ii + 2] = bvhNodes.get(i)[2];
-            //           System.out.print(bvhNodesBuff[ii] + " " + bvhNodesBuff[ii + 1] + " " + bvhNodesBuff[ii + 2] + " | ");
-        }
-//        System.out.print("\n");
-        return bvhNodesBuff;
     }
 
     @Override
@@ -307,8 +262,6 @@ public class ObjFile extends WorldObject {
         float d11;
         float denominator;
 
-        boolean inLeft = false, inRight = false;
-
         public Face(int v0, int v1, int v2, int t0, int t1, int t2) {
             this.v0 = v0;
             this.v1 = v1;
@@ -324,97 +277,6 @@ public class ObjFile extends WorldObject {
             this.d01 = Vector3.dot(edge0, edge1);
             this.d11 = Vector3.dot(edge1, edge1);
             this.denominator = d00 * d11 - d01 * d01;
-
-        }
-
-        public void vSplit(int axis, float distance) {
-            if (vertices.get(v0)[axis] <= distance) inLeft = true;
-            else inRight = true;
-            if (vertices.get(v1)[axis] <= distance) inLeft = true;
-            else inRight = true;
-            if (vertices.get(v2)[axis] <= distance) inLeft = true;
-            else inRight = true;
-        }
-
-        public void reset() {
-            inLeft = false;
-            inRight = false;
-        }
-    }
-
-    class Box {
-        public float[] min;
-        public float[] max;
-        public Box leftChild;
-        public Box rightChild;
-        public List<Face> boxFaces;
-
-        public Box(float[] min, float[] max) {
-            this.min = min;
-            this.max = max;
-            this.leftChild = null;
-            this.rightChild = null;
-            this.boxFaces = new ArrayList<>();
-        }
-
-        public void split(int depth, List<Face> facesFromParent) {
-            if (depth <= 0) return;
-
-            float[] size = Vector3.subtract(max, min);
-            int splitAxis = 0;
-            if (size[1] > size[0] && size[1] > size[2]) splitAxis = 1;
-            else if (size[2] > size[0] && size[2] > size[1]) splitAxis = 2;
-
-            float splitPos = min[splitAxis] + size[splitAxis] * 0.5f;
-
-            float[] leftMax = Vector3.scale(max, 1);
-            leftMax[splitAxis] = splitPos;
-            this.leftChild = new Box(min, leftMax);
-
-            float[] rightMin = Vector3.scale(min, 1);
-            rightMin[splitAxis] = splitPos;
-            this.rightChild = new Box(rightMin, max);
-
-            for (Face face : facesFromParent) {
-                face.reset();
-                face.vSplit(splitAxis, splitPos);
-                if (face.inLeft) leftChild.boxFaces.add(face);
-                if (face.inRight) rightChild.boxFaces.add(face);
-            }
-            if (!leftChild.boxFaces.isEmpty()) leftChild.split(depth - 1, leftChild.boxFaces);
-            else leftChild = null;
-            if (!rightChild.boxFaces.isEmpty()) rightChild.split(depth - 1, rightChild.boxFaces);
-            else rightChild = null;
-            facesFromParent.clear();
-        }
-
-        public boolean intersect(Ray ray) {
-            float tMin = Float.NEGATIVE_INFINITY;
-            float tMax = Float.POSITIVE_INFINITY;
-
-            for (int i = 0; i < 3; i++) {
-                if (Math.abs(ray.getDirection()[i]) < 0.000001f) {
-                    if (ray.getOrigin()[i] < min[i] || ray.getOrigin()[i] > max[i]) {
-                        return false;
-                    }
-                } else {
-                    float ood = 1.0f / ray.getDirection()[i];
-                    float t1 = (min[i] - ray.getOrigin()[i]) * ood;
-                    float t2 = (max[i] - ray.getOrigin()[i]) * ood;
-
-                    if (t1 > t2) {
-                        float temp = t1;
-                        t1 = t2;
-                        t2 = temp;
-                    }
-
-                    tMin = Math.max(tMin, t1);
-                    tMax = Math.min(tMax, t2);
-
-                    if (tMin > tMax) return false;
-                }
-            }
-            return tMax >= 0;
         }
     }
 }

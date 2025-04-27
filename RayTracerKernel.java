@@ -4,7 +4,7 @@ public class RayTracerKernel extends Kernel {
     private int objects;
     private int[] sizes;
     private float[] bvhBounds;
-    private int[] bvhNodes;
+    private float[] cache;
     private float[] vertices;
     private float[] texCoords;
     private int[] leafInsides;
@@ -15,13 +15,13 @@ public class RayTracerKernel extends Kernel {
     public int[] output;
 
     public RayTracerKernel(
-            int objects, int[] sizes, float[] bvhBounds, int[] bvhNodes,
+            int objects, int[] sizes, float[] bvhBounds, float[] cache,
             float[] vertices, float[] texCoords, int[] leafInsides,
             int[] texture, int[] output, float[] rays
     ) {
         this.sizes = sizes;
         this.bvhBounds = bvhBounds;
-        this.bvhNodes = bvhNodes;
+        this.cache = cache;
         this.leafInsides = leafInsides;
         this.vertices = vertices;
         this.texCoords = texCoords;
@@ -56,8 +56,7 @@ public class RayTracerKernel extends Kernel {
 
             int closestFace = -1;
 
-            int offset_N_B = sizes[oI * ObjFile.SIZES_SIZE + ObjFile.NODES_OFFSET];
-            int boundIndex = (offset_N_B) * ObjFile.BVH_BOUND_SIZE;
+            int boundIndex = oI * ObjFile.BVH_BOUND_SIZE;
             float minX = bvhBounds[boundIndex + ObjFile.BVH_BOUND_MIN_X];
             float minY = bvhBounds[boundIndex + ObjFile.BVH_BOUND_MIN_Y];
             float minZ = bvhBounds[boundIndex + ObjFile.BVH_BOUND_MIN_Z];
@@ -66,12 +65,9 @@ public class RayTracerKernel extends Kernel {
             float maxZ = bvhBounds[boundIndex + ObjFile.BVH_BOUND_MAX_Z];
 
             if (intersectAABB(ox, oy, oz, dx, dy, dz, minX, minY, minZ, maxX, maxY, maxZ)) {
-                int node = (offset_N_B) * ObjFile.BVH_NODE_SIZE;
-                int leftOrFirstFace = bvhNodes[node + ObjFile.BVH_NODE_LEFT_OR_FIRST];
-                int rightOrFaceCount = bvhNodes[node + ObjFile.BVH_NODE_RIGHT_FACE_COUNT];
-
-                for (int i = 0; i < rightOrFaceCount; i++) {
-                    int tI = (leftOrFirstFace + i) * ObjFile.FACE_SIZE;
+                int faceCount = sizes[oI * ObjFile.SIZES_SIZE + ObjFile.FACE_COUNT_OFFSET];
+                for (int i = 0; i < faceCount; i++) {
+                    int tI = i * ObjFile.FACE_SIZE;
                     float t = intersectTriangle(oI, tI, ox, oy, oz, dx, dy, dz);
                     if (t > 0.001f && t < closest) {
                         closest = t;
@@ -114,19 +110,23 @@ public class RayTracerKernel extends Kernel {
 
         int off_V = sizes[oI * ObjFile.SIZES_SIZE + ObjFile.VERTEX_OFFSET] * ObjFile.VERTEX_SIZE;
         int off_L = sizes[oI * ObjFile.SIZES_SIZE + ObjFile.LEAFS_OFFSET];
+        int c_I = (off_L + tI) / ObjFile.FACE_SIZE * ObjFile.CACHE_SIZE;
+
         int v1I = leafInsides[off_L + tI + ObjFile.VERTEX_1_INDEX] * ObjFile.VERTEX_SIZE;
-        int v2I = leafInsides[off_L + tI + ObjFile.VERTEX_2_INDEX] * ObjFile.VERTEX_SIZE;
-        int v3I = leafInsides[off_L + tI + ObjFile.VERTEX_3_INDEX] * ObjFile.VERTEX_SIZE;
+
         float v0x = vertices[off_V + v1I + ObjFile.VERTEX_X], v0y = vertices[off_V + v1I + ObjFile.VERTEX_Y], v0z = vertices[off_V + v1I + ObjFile.VERTEX_Z];
-        float v1x = vertices[off_V + v2I + ObjFile.VERTEX_X], v1y = vertices[off_V + v2I + ObjFile.VERTEX_Y], v1z = vertices[off_V + v2I + ObjFile.VERTEX_Z];
-        float v2x = vertices[off_V + v3I + ObjFile.VERTEX_X], v2y = vertices[off_V + v3I + ObjFile.VERTEX_Y], v2z = vertices[off_V + v3I + ObjFile.VERTEX_Z];
 
-        float e1x = v1x - v0x, e1y = v1y - v0y, e1z = v1z - v0z;
-        float e2x = v2x - v0x, e2y = v2y - v0y, e2z = v2z - v0z;
 
-        float nx = e1y * e2z - e1z * e2y;
-        float ny = e1z * e2x - e1x * e2z;
-        float nz = e1x * e2y - e1y * e2x;
+        float e1x = cache[c_I + ObjFile.EDGE_1_X];
+        float e1y = cache[c_I + ObjFile.EDGE_1_Y];
+        float e1z = cache[c_I + ObjFile.EDGE_1_Z];
+        float e2x = cache[c_I + ObjFile.EDGE_2_X];
+        float e2y = cache[c_I + ObjFile.EDGE_2_Y];
+        float e2z = cache[c_I + ObjFile.EDGE_2_Z];
+
+        float nx = cache[c_I + ObjFile.NORMAL_X];
+        float ny = cache[c_I + ObjFile.NORMAL_Y];
+        float nz = cache[c_I + ObjFile.NORMAL_Z];
 
         if (dx * nx + dy * ny + nz * dz < 0) {
             float px = dy * e2z - dz * e2y;
@@ -158,10 +158,10 @@ public class RayTracerKernel extends Kernel {
         int o_TC = sizes[oI * ObjFile.SIZES_SIZE + ObjFile.TEXT_COORD_OFFSET] * ObjFile.TEXTURE_COORD_SIZE;
         int o_L = sizes[oI * ObjFile.SIZES_SIZE + ObjFile.LEAFS_OFFSET];
         int o_T = sizes[oI * ObjFile.SIZES_SIZE + ObjFile.TEXTURE_OFFSET];
+        int c_I = (o_L + tI) / ObjFile.FACE_SIZE * ObjFile.CACHE_SIZE;
 
         int v1I = leafInsides[o_L + tI + ObjFile.VERTEX_1_INDEX] * ObjFile.VERTEX_SIZE;
-        int v2I = leafInsides[o_L + tI + ObjFile.VERTEX_2_INDEX] * ObjFile.VERTEX_SIZE;
-        int v3I = leafInsides[o_L + tI + ObjFile.VERTEX_3_INDEX] * ObjFile.VERTEX_SIZE;
+
         int tv0I = leafInsides[o_L + tI + ObjFile.TEXTURE_COORD_1_INDEX] * ObjFile.TEXTURE_COORD_SIZE;
         int tv1I = leafInsides[o_L + tI + ObjFile.TEXTURE_COORD_2_INDEX] * ObjFile.TEXTURE_COORD_SIZE;
         int tv2I = leafInsides[o_L + tI + ObjFile.TEXTURE_COORD_3_INDEX] * ObjFile.TEXTURE_COORD_SIZE;
@@ -169,28 +169,27 @@ public class RayTracerKernel extends Kernel {
         float v0x = vertices[o_V + v1I + ObjFile.VERTEX_X];
         float v0y = vertices[o_V + v1I + ObjFile.VERTEX_Y];
         float v0z = vertices[o_V + v1I + ObjFile.VERTEX_Z];
-        float v1x = vertices[o_V + v2I + ObjFile.VERTEX_X];
-        float v1y = vertices[o_V + v2I + ObjFile.VERTEX_Y];
-        float v1z = vertices[o_V + v2I + ObjFile.VERTEX_Z];
-        float v2x = vertices[o_V + v3I + ObjFile.VERTEX_X];
-        float v2y = vertices[o_V + v3I + ObjFile.VERTEX_Y];
-        float v2z = vertices[o_V + v3I + ObjFile.VERTEX_Z];
 
         float hitX = ox + t * dx;
         float hitY = oy + t * dy;
         float hitZ = oz + t * dz;
 
-        float v0v1x = v1x - v0x, v0v1y = v1y - v0y, v0v1z = v1z - v0z;
-        float v0v2x = v2x - v0x, v0v2y = v2y - v0y, v0v2z = v2z - v0z;
+        float e1x = cache[c_I + ObjFile.EDGE_1_X];
+        float e1y = cache[c_I + ObjFile.EDGE_1_Y];
+        float e1z = cache[c_I + ObjFile.EDGE_1_Z];
+        float e2x = cache[c_I + ObjFile.EDGE_2_X];
+        float e2y = cache[c_I + ObjFile.EDGE_2_Y];
+        float e2z = cache[c_I + ObjFile.EDGE_2_Z];
+
         float v0px = hitX - v0x, v0py = hitY - v0y, v0pz = hitZ - v0z;
 
-        float d00 = v0v1x * v0v1x + v0v1y * v0v1y + v0v1z * v0v1z;
-        float d01 = v0v1x * v0v2x + v0v1y * v0v2y + v0v1z * v0v2z;
-        float d11 = v0v2x * v0v2x + v0v2y * v0v2y + v0v2z * v0v2z;
-        float d20 = v0px * v0v1x + v0py * v0v1y + v0pz * v0v1z;
-        float d21 = v0px * v0v2x + v0py * v0v2y + v0pz * v0v2z;
+        float d00 = cache[c_I + ObjFile.D00];
+        float d01 = cache[c_I + ObjFile.D01];
+        float d11 = cache[c_I + ObjFile.D11];
+        float d20 = v0px * e1x + v0py * e1y + v0pz * e1z;
+        float d21 = v0px * e2x + v0py * e2y + v0pz * e2z;
 
-        float denom = d00 * d11 - d01 * d01;
+        float denom = cache[c_I + ObjFile.DENOMINATOR];
         float bv = (d11 * d20 - d01 * d21) / denom;
         float bw = (d00 * d21 - d01 * d20) / denom;
         float bu = 1.0f - bv - bw;

@@ -13,6 +13,7 @@ public class WorldBase {
     private final Stack<WorldObject> objectsOnAdd = new Stack<>();
     private final Random r = new Random();
     private WorldObject winShape;
+    public TextureCollection textureCollection = new TextureCollection();
     public WorldBase newWorld;
     public boolean needChangeWorld = false;
 
@@ -53,13 +54,16 @@ public class WorldBase {
     }
 
     public void addPortal(WorldBase world) throws IOException {
+        Texture portalTexture = new Texture("D:\\C_project\\Raytracer\\images\\portal.png");
+        textureCollection.addTexture(portalTexture);
+
         objects.add(new Portal(
                 new float[]{7, 0, 3},
                 2f,
                 ColorOperation.GColorToInt(new Color(130, 130, 130)),
                 "D:\\C_project\\Raytracer\\models\\portal.obj",
-                0, true,
-                "D:\\C_project\\Raytracer\\images\\portal.png",
+                true,
+                textureCollection.getIndex(portalTexture),
                 world)
         );
     }
