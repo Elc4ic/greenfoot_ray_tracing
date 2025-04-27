@@ -3,8 +3,8 @@ import java.io.IOException;
 public class Portal extends ObjFile {
     private WorldBase to;
 
-    public Portal(float[] pos, float scale, int color, String filePath, int depth, boolean hasTexture, String texturePath,WorldBase world) throws IOException {
-        super(pos, scale, color, filePath, depth, hasTexture, texturePath);
+    public Portal(float[] pos, float scale, int color, String filePath, boolean hasTexture, int textureIndex, WorldBase world) throws IOException {
+        super(pos, scale, color, filePath, hasTexture, textureIndex);
         this.to = world;
     }
 

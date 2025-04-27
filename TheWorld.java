@@ -5,6 +5,7 @@ import greenfoot.*;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.List;
 
 
 public class TheWorld extends World {
@@ -16,7 +17,7 @@ public class TheWorld extends World {
 
     private final WorldBase hell = new Hell();
     private final WorldBase being = new Being();
-    private final WorldBase maze = new MazeWorld(hero);
+//    private final WorldBase maze = new MazeWorld(hero);
 
     private final FPSCounter fPSCounter = new FPSCounter();
     GreenfootImage frame = new GreenfootImage(Const.WIDTH, Const.HEIGHT);
@@ -25,7 +26,7 @@ public class TheWorld extends World {
 
     private int[] sizes;
     private float[] bvhBounds;
-    private int[] bvhNodes;
+    private float[] cache;
     private int[] leafInsides;
     private float[] vertices;
     private float[] texCoords;
@@ -53,9 +54,9 @@ public class TheWorld extends World {
     void initWorld() {
         int n = initBuffersFromObjects(worldBase.getObjects());
         kernel = new RayTracerKernel(
-                n, sizes, bvhBounds, bvhNodes, vertices, texCoords, leafInsides, texture, output, rays
+                n, sizes, bvhBounds, cache, vertices, texCoords, leafInsides, texture, output, rays
         );
-        kernel.setExecutionModeWithoutFallback(Kernel.EXECUTION_MODE.GPU);
+        kernel.setExecutionModeWithoutFallback(Kernel.EXECUTION_MODE.JTP);
         kernel.setExplicit(true);
         System.gc();
     }
@@ -144,64 +145,77 @@ public class TheWorld extends World {
     private int initBuffersFromObjects(ArrayList<WorldObject> objects) {
         //init sizes
         int[] sizeNode = new int[ObjFile.SIZES_SIZE];
-        int i1 = (int) objects.stream().filter(obj -> obj instanceof ObjFile).count();
-        sizes = new int[i1 * ObjFile.SIZES_SIZE];
+        int nOfObj = (int) objects.stream().filter(obj -> obj instanceof ObjFile).count();
+        sizes = new int[nOfObj * ObjFile.SIZES_SIZE];
         //init other arrays by size
-        i1 = 0;
+        nOfObj = 0;
         for (WorldObject object : objects) {
             if (object instanceof ObjFile obj) {
-                sizes[i1 * ObjFile.SIZES_SIZE + ObjFile.VERTEX_OFFSET] = sizeNode[ObjFile.VERTEX_OFFSET];
-                sizes[i1 * ObjFile.SIZES_SIZE + ObjFile.TEXT_COORD_OFFSET] = sizeNode[ObjFile.TEXT_COORD_OFFSET];
-                sizes[i1 * ObjFile.SIZES_SIZE + ObjFile.LEAFS_OFFSET] = sizeNode[ObjFile.LEAFS_OFFSET];
-                sizes[i1 * ObjFile.SIZES_SIZE + ObjFile.NODES_OFFSET] = sizeNode[ObjFile.NODES_OFFSET];
-                sizes[i1 * ObjFile.SIZES_SIZE + ObjFile.TEXTURE_OFFSET] = sizeNode[ObjFile.TEXTURE_OFFSET];
-                sizes[i1 * ObjFile.SIZES_SIZE + ObjFile.TEXTURE_WIDTH] = obj.textureWidth;
-                sizes[i1 * ObjFile.SIZES_SIZE + ObjFile.TEXTURE_HEIGHT] = obj.textureHeight;
+                sizes[nOfObj * ObjFile.SIZES_SIZE + ObjFile.VERTEX_OFFSET] = sizeNode[ObjFile.VERTEX_OFFSET];
+                sizes[nOfObj * ObjFile.SIZES_SIZE + ObjFile.TEXT_COORD_OFFSET] = sizeNode[ObjFile.TEXT_COORD_OFFSET];
+                sizes[nOfObj * ObjFile.SIZES_SIZE + ObjFile.LEAFS_OFFSET] = sizeNode[ObjFile.LEAFS_OFFSET];
+                sizes[nOfObj * ObjFile.SIZES_SIZE + ObjFile.FACE_COUNT_OFFSET] = obj.getFaceCount();
+                sizes[nOfObj * ObjFile.SIZES_SIZE + ObjFile.TEXTURE_OFFSET] = sizeNode[ObjFile.TEXTURE_OFFSET];
                 sizeNode[ObjFile.VERTEX_OFFSET] += obj.getVertexSize();
                 sizeNode[ObjFile.TEXT_COORD_OFFSET] += obj.getTextureCoordSize();
                 sizeNode[ObjFile.LEAFS_OFFSET] += obj.getLeafIndicesSize();
-                sizeNode[ObjFile.NODES_OFFSET] += obj.getBvhNodesSize();
-                sizeNode[ObjFile.TEXTURE_OFFSET] += obj.getTextureSize();
-                i1++;
+
+                Texture texture = worldBase.textureCollection.getTexture(obj.textureIndex);
+                int offset = worldBase.textureCollection.getOffset(obj.textureIndex);
+                sizes[nOfObj * ObjFile.SIZES_SIZE + ObjFile.TEXTURE_WIDTH] = texture.textureWidth;
+                sizes[nOfObj * ObjFile.SIZES_SIZE + ObjFile.TEXTURE_HEIGHT] = texture.textureHeight;
+                sizes[nOfObj * ObjFile.SIZES_SIZE + ObjFile.TEXTURE_OFFSET] = offset;
+                nOfObj++;
             }
         }
-        bvhBounds = new float[sizeNode[ObjFile.NODES_OFFSET] * 6];
-        bvhNodes = new int[sizeNode[ObjFile.NODES_OFFSET] * 3];
+        bvhBounds = new float[nOfObj * 6];
+        cache = new float[sizeNode[ObjFile.LEAFS_OFFSET] / 6 * 13];
         leafInsides = new int[sizeNode[ObjFile.LEAFS_OFFSET]];
         vertices = new float[sizeNode[ObjFile.VERTEX_OFFSET] * 3];
         texCoords = new float[sizeNode[ObjFile.TEXT_COORD_OFFSET] * 2];
-        texture = new int[sizeNode[ObjFile.TEXTURE_OFFSET]];
+        texture = new int[worldBase.textureCollection.getAllTexturesSize()];
         //fill arrays
-        i1 = 0;
+        nOfObj = 0;
         for (int i = 0; i < objects.size(); i++) {
             if (objects.get(i) instanceof ObjFile obj) {
-                float[] bvhb = obj.getBvhBoundsBuff();
-                int[] bvhn = obj.getBvhNodesBuff();
+                float[] bvhb = obj.getBoundsBuff();
+                float[] cacheBuff = obj.getCacheBuff();
                 int[] leaf = obj.getLeafIndices();
                 float[] vertex = obj.getVerticesBuff();
                 float[] t_coord = obj.getTextCoordsBuff();
-                int[] text = obj.textureBuff;
-                System.arraycopy(vertex, 0, vertices, sizes[i1 * ObjFile.SIZES_SIZE + ObjFile.VERTEX_OFFSET] * 3, vertex.length);
-                System.arraycopy(t_coord, 0, texCoords, sizes[i1 * ObjFile.SIZES_SIZE + ObjFile.TEXT_COORD_OFFSET] * 2, t_coord.length);
-                System.arraycopy(leaf, 0, leafInsides, sizes[i1 * ObjFile.SIZES_SIZE + ObjFile.LEAFS_OFFSET], leaf.length);
-                System.arraycopy(bvhb, 0, bvhBounds, sizes[i1 * ObjFile.SIZES_SIZE + ObjFile.NODES_OFFSET] * 6, bvhb.length);
-                System.arraycopy(bvhn, 0, bvhNodes, sizes[i1 * ObjFile.SIZES_SIZE + ObjFile.NODES_OFFSET] * 3, bvhn.length);
-                System.arraycopy(text, 0, texture, sizes[i1 * ObjFile.SIZES_SIZE + ObjFile.TEXTURE_OFFSET], text.length);
-                i1++;
+
+                System.arraycopy(vertex, 0, vertices, sizes[nOfObj * ObjFile.SIZES_SIZE + ObjFile.VERTEX_OFFSET] * 3, vertex.length);
+                System.arraycopy(t_coord, 0, texCoords, sizes[nOfObj * ObjFile.SIZES_SIZE + ObjFile.TEXT_COORD_OFFSET] * 2, t_coord.length);
+                System.arraycopy(cacheBuff, 0, cache, sizes[nOfObj * ObjFile.SIZES_SIZE + ObjFile.LEAFS_OFFSET] / 6 * 13, cacheBuff.length);
+                System.arraycopy(leaf, 0, leafInsides, sizes[nOfObj * ObjFile.SIZES_SIZE + ObjFile.LEAFS_OFFSET], leaf.length);
+                System.arraycopy(bvhb, 0, bvhBounds, nOfObj * ObjFile.BVH_BOUND_SIZE, bvhb.length);
+
+                nOfObj++;
             }
         }
-        for (int i = 0; i < i1; i++) {
-            System.out.print(sizes[i * ObjFile.SIZES_SIZE + ObjFile.NODES_OFFSET] + " ");
+        List<Texture> textures = worldBase.textureCollection.collection;
+        for (int i = 0; i < textures.size(); i++) {
+            int[] text = worldBase.textureCollection.getTextureBuff(i);
+            System.arraycopy(text, 0, texture, worldBase.textureCollection.getOffset(i), text.length);
         }
-        System.out.println();
-        return i1;
+        for (int i = 0; i < sizes.length / ObjFile.SIZES_SIZE; i++) {
+            System.out.print(sizes[i * ObjFile.SIZES_SIZE + ObjFile.VERTEX_OFFSET] + " ");
+            System.out.print(sizes[i * ObjFile.SIZES_SIZE + ObjFile.TEXT_COORD_OFFSET] + " ");
+            System.out.print(sizes[i * ObjFile.SIZES_SIZE + ObjFile.LEAFS_OFFSET] + " ");
+            System.out.print(sizes[i * ObjFile.SIZES_SIZE + ObjFile.FACE_COUNT_OFFSET] + " ");
+            System.out.print(sizes[i * ObjFile.SIZES_SIZE + ObjFile.TEXTURE_OFFSET] + " ");
+            System.out.print(sizes[i * ObjFile.SIZES_SIZE + ObjFile.TEXTURE_WIDTH] + " ");
+            System.out.println(sizes[i * ObjFile.SIZES_SIZE + ObjFile.TEXTURE_HEIGHT]);
+        }
+        System.out.println(nOfObj);
+        return nOfObj;
     }
 
     private void render() {
         initRays();
         kernel.put(sizes);
         kernel.put(bvhBounds);
-        kernel.put(bvhNodes);
+        kernel.put(cache);
         kernel.put(vertices);
         kernel.put(texCoords);
         kernel.put(leafInsides);
