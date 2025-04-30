@@ -13,10 +13,11 @@ public class TheWorld extends World {
     private final Interface interface1;
     private final Hero hero = new Hero(new float[]{3, 1.4f, 3}, new float[]{1, 0, 1}, 45);
 
-    private WorldBase worldBase = new WorldBase();
-
     private final WorldBase hell = new Hell();
     private final WorldBase being = new Being();
+
+    private WorldBase worldBase = hell;
+
 //    private final WorldBase maze = new MazeWorld(hero);
 
     private final FPSCounter fPSCounter = new FPSCounter();
@@ -24,8 +25,10 @@ public class TheWorld extends World {
     Kernel kernel;
     Range range = Range.create(Const.HEIGHT * Const.WIDTH);
 
+    private float[] positions;
+    private float[] rotations;
     private int[] sizes;
-    private float[] bvhBounds;
+    private float[] bounds;
     private float[] cache;
     private int[] leafInsides;
     private float[] vertices;
@@ -52,11 +55,11 @@ public class TheWorld extends World {
     }
 
     void initWorld() {
-        int n = initBuffersFromObjects(worldBase.getObjects());
+        initStaticDataFromObjects(worldBase.getObjects());
         kernel = new RayTracerKernel(
-                n, sizes, bvhBounds, cache, vertices, texCoords, leafInsides, texture, output, rays
+                positions, rotations, sizes, bounds, cache, vertices, texCoords, leafInsides, texture, output, rays
         );
-        kernel.setExecutionModeWithoutFallback(Kernel.EXECUTION_MODE.GPU);
+        kernel.setExecutionModeWithoutFallback(Kernel.EXECUTION_MODE.JTP);
         kernel.setExplicit(true);
         System.gc();
     }
@@ -142,7 +145,7 @@ public class TheWorld extends World {
     }
 
 
-    private int initBuffersFromObjects(ArrayList<WorldObject> objects) {
+    private void initStaticDataFromObjects(ArrayList<WorldObject> objects) {
         //init sizes
         int[] sizeNode = new int[ObjFile.SIZES_SIZE];
         int nOfObj = (int) objects.stream().filter(obj -> obj instanceof ObjFile).count();
@@ -168,7 +171,9 @@ public class TheWorld extends World {
                 nOfObj++;
             }
         }
-        bvhBounds = new float[nOfObj * 6];
+        rotations = new float[nOfObj * ObjFile.ROTATION_SIZE];
+        positions = new float[nOfObj * ObjFile.POS_SIZE];
+        bounds = new float[nOfObj * ObjFile.BOUND_SIZE];
         cache = new float[sizeNode[ObjFile.LEAFS_OFFSET] / 6 * 13];
         leafInsides = new int[sizeNode[ObjFile.LEAFS_OFFSET]];
         vertices = new float[sizeNode[ObjFile.VERTEX_OFFSET] * 3];
@@ -176,8 +181,8 @@ public class TheWorld extends World {
         texture = new int[worldBase.textureCollection.getAllTexturesSize()];
         //fill arrays
         nOfObj = 0;
-        for (int i = 0; i < objects.size(); i++) {
-            if (objects.get(i) instanceof ObjFile obj) {
+        for (WorldObject object : objects) {
+            if (object instanceof ObjFile obj) {
                 float[] bvhb = obj.getBoundsBuff();
                 float[] cacheBuff = obj.getCacheBuff();
                 int[] leaf = obj.getLeafIndices();
@@ -188,7 +193,7 @@ public class TheWorld extends World {
                 System.arraycopy(t_coord, 0, texCoords, sizes[nOfObj * ObjFile.SIZES_SIZE + ObjFile.TEXT_COORD_OFFSET] * 2, t_coord.length);
                 System.arraycopy(cacheBuff, 0, cache, sizes[nOfObj * ObjFile.SIZES_SIZE + ObjFile.LEAFS_OFFSET] / 6 * 13, cacheBuff.length);
                 System.arraycopy(leaf, 0, leafInsides, sizes[nOfObj * ObjFile.SIZES_SIZE + ObjFile.LEAFS_OFFSET], leaf.length);
-                System.arraycopy(bvhb, 0, bvhBounds, nOfObj * ObjFile.BVH_BOUND_SIZE, bvhb.length);
+                System.arraycopy(bvhb, 0, bounds, nOfObj * ObjFile.BOUND_SIZE, bvhb.length);
 
                 nOfObj++;
             }
@@ -198,19 +203,24 @@ public class TheWorld extends World {
             int[] text = worldBase.textureCollection.getTextureBuff(i);
             System.arraycopy(text, 0, texture, worldBase.textureCollection.getOffset(i), text.length);
         }
-        return nOfObj;
     }
 
     private void render() {
+        initRotation(worldBase.getObjects());
+        initPosition(worldBase.getObjects());
         initRays();
+
         kernel.put(sizes);
-        kernel.put(bvhBounds);
+        kernel.put(bounds);
         kernel.put(cache);
         kernel.put(vertices);
         kernel.put(texCoords);
         kernel.put(leafInsides);
         kernel.put(texture);
         kernel.put(rays);
+        kernel.put(positions);
+        kernel.put(rotations);
+
         kernel.execute(range);
         kernel.get(output);
         for (int y = 0; y < Const.HEIGHT; y++) {
@@ -221,6 +231,28 @@ public class TheWorld extends World {
         kernel.dispose();
         frame.scale(Const.SCALED_WIDTH, Const.SCALED_HEIGHT);
         setBackground(frame);
+    }
+
+    private void initRotation(ArrayList<WorldObject> objects) {
+        int nOfObj = 0;
+        for (WorldObject object : objects) {
+            if (object instanceof ObjFile obj) {
+                float[] rotor = obj.getRotation();
+                System.arraycopy(rotor, 0, rotations, nOfObj * ObjFile.POS_SIZE, rotor.length);
+                nOfObj++;
+            }
+        }
+    }
+
+    private void initPosition(ArrayList<WorldObject> objects) {
+        int nOfObj = 0;
+        for (WorldObject object : objects) {
+            if (object instanceof ObjFile obj) {
+                float[] pos = obj.getPos();
+                System.arraycopy(pos, 0, positions, nOfObj * ObjFile.POS_SIZE, pos.length);
+                nOfObj++;
+            }
+        }
     }
 
     private void initRays() {
@@ -240,55 +272,6 @@ public class TheWorld extends World {
             }
         }
     }
-
-//    private void render() {
-//        int wc = w / 2;
-//        int hc = h / 2;
-//        int col;
-//        GreenfootImage frame = new GreenfootImage(w, h);
-//        for (int x = 0; x < w; x++) {
-//            for (int y = 0; y < h; y++) {
-//                if (hero.getGun().isCrosshair(x, y, wc, hc)) {
-//                    col = ColorOperation.red;
-//                } else {
-//
-//                    col = trace(ray);
-//                }
-//                frame.setColorAt(x, h - y - 1, ColorOperation.IntToGColor(col));
-//            }
-//        }
-//        frame.scale(ww, wh);
-//        setBackground(frame);
-//    }
-
-//    private Intersection testRay(Ray ray) {
-//        Intersection inter = new Intersection(new float[]{0, 0, 0}, -1, new float[]{0, 0, 0}, 0);
-//        for (WorldObject o : objects) {
-//            if (!(o instanceof Plane) && !hero.needRenderObject(o.getPos())) continue;
-//            Intersection inter2 = o.getIntersection(ray);
-//            float d1 = inter.getDistance();
-//            float d2 = inter2.getDistance();
-//            if (d2 > 0 && (d1 < 0 || d1 > d2)) {
-//                inter = inter2;
-//            }
-//        }
-//        return inter;
-//    }
-//
-//    private int trace(Ray ray) {
-//        Intersection inter = testRay(ray);
-//        if (inter.getDistance() < 0) {
-//            return (int) (inter.color * Const.AMBIENT);
-//        }
-//        int res = 0;
-//
-//        for (Light light : lights) {
-//            if (light.needLight(hero)) {
-//                res = ColorOperation.addColor(res, light.useLight(inter, Const.AMBIENT));
-//            }
-//        }
-//        return res;
-//    }
 
     void lose() {
         GreenfootImage img = new GreenfootImage(

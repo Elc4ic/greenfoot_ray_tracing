@@ -26,9 +26,10 @@ public class WorldBase {
             if (o instanceof Npc) {
                 if (((Npc) o).updateNpc(objectsOnAdd, this)) objectsOnDestroy.add(o);
             }
-//            if (o instanceof ObjFile) {
-//                ((ObjFile) o).rotateX(10);
-//            }
+            if (o instanceof ObjFile obj) {
+                obj.addToRotation(new float[]{5f, 0, 0});
+//                obj.addToPos(new float[]{0.1f, 0, 0});
+            }
             if (o instanceof Bullet) {
                 if (((Bullet) o).update()) {
                     if (((Bullet) o).isBfg()) {

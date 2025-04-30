@@ -11,15 +11,32 @@ public class ObjFile extends WorldObject {
     private final List<Integer> leafIndices = new ArrayList<>();
     private final List<float[]> cache = new ArrayList<>();
     private final List<float[]> bounds = new ArrayList<>();
-    List<int[]> faces = new ArrayList<>();
+    private List<int[]> faces = new ArrayList<>();
 
-    public static final int BVH_BOUND_SIZE = 6;
+    private float scale;
+    private float[] pos;
+    private float[] rotation = {0, 0, 0};
+
+    boolean hasTexture;
+    int textureIndex;
+
+    public static final int BOUND_SIZE = 6;
     public static final int BVH_BOUND_MIN_X = 0;
     public static final int BVH_BOUND_MIN_Y = 1;
     public static final int BVH_BOUND_MIN_Z = 2;
     public static final int BVH_BOUND_MAX_X = 3;
     public static final int BVH_BOUND_MAX_Y = 4;
     public static final int BVH_BOUND_MAX_Z = 5;
+
+    public static final int POS_SIZE = 3;
+    public static final int POS_X = 0;
+    public static final int POS_Y = 1;
+    public static final int POS_Z = 2;
+
+    public static final int ROTATION_SIZE = 3;
+    public static final int ROTATION_X = 0;
+    public static final int ROTATION_Y = 1;
+    public static final int ROTATION_Z = 2;
 
     public static final int TEXTURE_COORD_SIZE = 2;
     public static final int TEXTURE_COORD_U = 0;
@@ -62,11 +79,6 @@ public class ObjFile extends WorldObject {
     public static final int TEXTURE_WIDTH = 5;
     public static final int TEXTURE_HEIGHT = 6;
 
-    private float scale;
-    private float[] pos;
-    private boolean hasTexture;
-    int textureIndex;
-
     public ObjFile(float[] pos, float scale, int color, String filePath, boolean hasTexture, int textureIndex) throws IOException {
         super(color);
         this.pos = pos;
@@ -84,9 +96,12 @@ public class ObjFile extends WorldObject {
         for (String line : lines) {
             if (line.startsWith("v ")) {
                 String[] parts = line.split("\\s+");
-                float x = Float.parseFloat(parts[1]) * scale + pos[0];
-                float y = Float.parseFloat(parts[2]) * scale + pos[1];
-                float z = Float.parseFloat(parts[3]) * scale + pos[2];
+//                float x = Float.parseFloat(parts[1]) * scale + pos[0];
+//                float y = Float.parseFloat(parts[2]) * scale + pos[1];
+//                float z = Float.parseFloat(parts[3]) * scale + pos[2];
+                float x = Float.parseFloat(parts[1]) * scale;
+                float y = Float.parseFloat(parts[2]) * scale;
+                float z = Float.parseFloat(parts[3]) * scale;
                 vertices.add(new float[]{x, y, z});
 
                 minX = Math.min(minX, x);
@@ -229,6 +244,20 @@ public class ObjFile extends WorldObject {
     @Override
     public float[] getPos() {
         return pos;
+    }
+
+    public float[] getRotation() {
+        return rotation;
+    }
+
+    public void addToPos(float[] pos) {
+        this.pos = Vector3.add(this.pos, pos);
+    }
+
+    public void addToRotation(float[] pos) {
+        rotation[0] = (rotation[0] + pos[0]) % 360;
+        rotation[1] = (rotation[1] + pos[1]) % 360;
+        rotation[2] = (rotation[2] + pos[2]) % 360;
     }
 
     @Override

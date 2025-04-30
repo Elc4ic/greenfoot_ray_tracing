@@ -1,9 +1,10 @@
 import com.aparapi.Kernel;
 
 public class RayTracerKernel extends Kernel {
-    private int objects;
+    private float[] positions;
+    private float[] rotations;
     private int[] sizes;
-    private float[] bvhBounds;
+    private float[] bounds;
     private float[] cache;
     private float[] vertices;
     private float[] texCoords;
@@ -15,12 +16,12 @@ public class RayTracerKernel extends Kernel {
     public int[] output;
 
     public RayTracerKernel(
-            int objects, int[] sizes, float[] bvhBounds, float[] cache,
+            float[] positions, float[] rotations, int[] sizes, float[] bounds, float[] cache,
             float[] vertices, float[] texCoords, int[] leafInsides,
             int[] texture, int[] output, float[] rays
     ) {
         this.sizes = sizes;
-        this.bvhBounds = bvhBounds;
+        this.bounds = bounds;
         this.cache = cache;
         this.leafInsides = leafInsides;
         this.vertices = vertices;
@@ -28,7 +29,8 @@ public class RayTracerKernel extends Kernel {
         this.texture = texture;
         this.rays = rays;
         this.output = output;
-        this.objects = objects;
+        this.positions = positions;
+        this.rotations = rotations;
     }
 
     @Override
@@ -52,19 +54,11 @@ public class RayTracerKernel extends Kernel {
         int col = 0xffffff;
         float closest = 3.4028235E38f;
 
-        for (int oI = 0; oI < objects; oI++) {
+        for (int oI = 0; oI < sizes.length / ObjFile.SIZES_SIZE; oI++) {
 
             int closestFace = -1;
 
-            int boundIndex = oI * ObjFile.BVH_BOUND_SIZE;
-            float minX = bvhBounds[boundIndex + ObjFile.BVH_BOUND_MIN_X];
-            float minY = bvhBounds[boundIndex + ObjFile.BVH_BOUND_MIN_Y];
-            float minZ = bvhBounds[boundIndex + ObjFile.BVH_BOUND_MIN_Z];
-            float maxX = bvhBounds[boundIndex + ObjFile.BVH_BOUND_MAX_X];
-            float maxY = bvhBounds[boundIndex + ObjFile.BVH_BOUND_MAX_Y];
-            float maxZ = bvhBounds[boundIndex + ObjFile.BVH_BOUND_MAX_Z];
-
-            if (intersectAABB(ox, oy, oz, dx, dy, dz, minX, minY, minZ, maxX, maxY, maxZ)) {
+            if (intersectAABB(oI, ox, oy, oz, dx, dy, dz)) {
                 int faceCount = sizes[oI * ObjFile.SIZES_SIZE + ObjFile.FACE_COUNT_OFFSET];
                 for (int i = 0; i < faceCount; i++) {
                     int tI = i * ObjFile.FACE_SIZE;
@@ -84,9 +78,27 @@ public class RayTracerKernel extends Kernel {
         return col;
     }
 
-    private boolean intersectAABB(float ox, float oy, float oz, float dx, float dy, float dz,
-                                  float minX, float minY, float minZ,
-                                  float maxX, float maxY, float maxZ) {
+    private boolean intersectAABB(int oI, float ox, float oy, float oz, float dx, float dy, float dz) {
+        float posX = positions[oI * ObjFile.POS_SIZE + ObjFile.POS_X];
+        float posY = positions[oI * ObjFile.POS_SIZE + ObjFile.POS_Y];
+        float posZ = positions[oI * ObjFile.POS_SIZE + ObjFile.POS_Z];
+
+        int boundIndex = oI * ObjFile.BOUND_SIZE;
+
+        float minX = bounds[boundIndex + ObjFile.BVH_BOUND_MIN_X] + posX;
+
+        float minY = bounds[boundIndex + ObjFile.BVH_BOUND_MIN_Y] + posY;
+        float minZ = bounds[boundIndex + ObjFile.BVH_BOUND_MIN_Z] + posZ;
+        float maxX = bounds[boundIndex + ObjFile.BVH_BOUND_MAX_X] + posX;
+        float maxY = bounds[boundIndex + ObjFile.BVH_BOUND_MAX_Y] + posY;
+        float maxZ = bounds[boundIndex + ObjFile.BVH_BOUND_MAX_Z] + posZ;
+
+        minX = rotateXx(minX, minZ, rotations[oI * ObjFile.ROTATION_SIZE + ObjFile.ROTATION_X]);
+        minZ = rotateXz(minX, minZ, rotations[oI * ObjFile.ROTATION_SIZE + ObjFile.ROTATION_X]);
+
+        maxX = rotateXx(maxX, maxZ, rotations[oI * ObjFile.ROTATION_SIZE + ObjFile.ROTATION_X]);
+        maxZ = rotateXz(maxX, maxZ, rotations[oI * ObjFile.ROTATION_SIZE + ObjFile.ROTATION_X]);
+
         float t1 = (minX - ox) / dx;
         float t2 = (maxX - ox) / dx;
         float tmin = min(t1, t2);
@@ -108,14 +120,22 @@ public class RayTracerKernel extends Kernel {
     private float intersectTriangle(int oI, int tI, float ox, float oy, float oz, float dx, float dy, float dz) {
         float t = -1f;
 
+        float posX = positions[oI * ObjFile.POS_SIZE + ObjFile.POS_X];
+        float posY = positions[oI * ObjFile.POS_SIZE + ObjFile.POS_Y];
+        float posZ = positions[oI * ObjFile.POS_SIZE + ObjFile.POS_Z];
+
         int off_V = sizes[oI * ObjFile.SIZES_SIZE + ObjFile.VERTEX_OFFSET] * ObjFile.VERTEX_SIZE;
         int off_L = sizes[oI * ObjFile.SIZES_SIZE + ObjFile.LEAFS_OFFSET];
         int c_I = (off_L + tI) / ObjFile.FACE_SIZE * ObjFile.CACHE_SIZE;
 
         int v1I = leafInsides[off_L + tI + ObjFile.VERTEX_1_INDEX] * ObjFile.VERTEX_SIZE;
 
-        float v0x = vertices[off_V + v1I + ObjFile.VERTEX_X], v0y = vertices[off_V + v1I + ObjFile.VERTEX_Y], v0z = vertices[off_V + v1I + ObjFile.VERTEX_Z];
+        float v0x = vertices[off_V + v1I + ObjFile.VERTEX_X] + posX;
+        float v0y = vertices[off_V + v1I + ObjFile.VERTEX_Y] + posY;
+        float v0z = vertices[off_V + v1I + ObjFile.VERTEX_Z] + posZ;
 
+        v0x = rotateXx(v0x, v0z, rotations[oI * ObjFile.ROTATION_SIZE + ObjFile.ROTATION_X]);
+        v0z = rotateXz(v0x, v0z, rotations[oI * ObjFile.ROTATION_SIZE + ObjFile.ROTATION_X]);
 
         float e1x = cache[c_I + ObjFile.EDGE_1_X];
         float e1y = cache[c_I + ObjFile.EDGE_1_Y];
@@ -154,6 +174,10 @@ public class RayTracerKernel extends Kernel {
     }
 
     private int getColorFromTexture(int oI, int tI, float ox, float oy, float oz, float dx, float dy, float dz, float t) {
+        float posX = positions[oI * ObjFile.POS_SIZE + ObjFile.POS_X];
+        float posY = positions[oI * ObjFile.POS_SIZE + ObjFile.POS_Y];
+        float posZ = positions[oI * ObjFile.POS_SIZE + ObjFile.POS_Z];
+
         int o_V = sizes[oI * ObjFile.SIZES_SIZE + ObjFile.VERTEX_OFFSET] * ObjFile.VERTEX_SIZE;
         int o_TC = sizes[oI * ObjFile.SIZES_SIZE + ObjFile.TEXT_COORD_OFFSET] * ObjFile.TEXTURE_COORD_SIZE;
         int o_L = sizes[oI * ObjFile.SIZES_SIZE + ObjFile.LEAFS_OFFSET];
@@ -166,9 +190,12 @@ public class RayTracerKernel extends Kernel {
         int tv1I = leafInsides[o_L + tI + ObjFile.TEXTURE_COORD_2_INDEX] * ObjFile.TEXTURE_COORD_SIZE;
         int tv2I = leafInsides[o_L + tI + ObjFile.TEXTURE_COORD_3_INDEX] * ObjFile.TEXTURE_COORD_SIZE;
 
-        float v0x = vertices[o_V + v1I + ObjFile.VERTEX_X];
-        float v0y = vertices[o_V + v1I + ObjFile.VERTEX_Y];
-        float v0z = vertices[o_V + v1I + ObjFile.VERTEX_Z];
+        float v0x = vertices[o_V + v1I + ObjFile.VERTEX_X] + posX;
+        float v0y = vertices[o_V + v1I + ObjFile.VERTEX_Y] + posY;
+        float v0z = vertices[o_V + v1I + ObjFile.VERTEX_Z] + posZ;
+
+        v0x = rotateXx(v0x, v0z, rotations[oI * ObjFile.POS_SIZE + ObjFile.POS_X]);
+        v0z = rotateXz(v0x, v0z, rotations[oI * ObjFile.POS_SIZE + ObjFile.POS_X]);
 
         float hitX = ox + t * dx;
         float hitY = oy + t * dy;
@@ -210,28 +237,40 @@ public class RayTracerKernel extends Kernel {
         return texture[o_T + y * w + x];
     }
 
-    void add(float[] a, float[] b, float[] result) {
-        result[0] = a[0] + b[0];
-        result[1] = a[1] + b[1];
-        result[2] = a[2] + b[2];
+    float rotateXx(float x, float z, float angle) {
+        float cos = cos(toRadians(angle));
+        float sin = sin(toRadians(angle));
+        return x * cos - z * sin;
     }
 
-    void sub(float[] a, float[] b, float[] result) {
-        result[0] = a[0] - b[0];
-        result[1] = a[1] - b[1];
-        result[2] = a[2] - b[2];
+    float rotateXz(float x, float z, float angle) {
+        float cos = cos(toRadians(angle));
+        float sin = sin(toRadians(angle));
+        return x * sin + z * cos;
     }
 
-    void scale(float[] v, float s, float[] result) {
-        result[0] = v[0] * s;
-        result[1] = v[1] * s;
-        result[2] = v[2] * s;
+    float rotateYy(float y, float z, float angle) {
+        float cos = cos(toRadians(angle));
+        float sin = sin(toRadians(angle));
+        return y * cos - z * sin;
     }
 
-    void cross(float[] a, float[] b, float[] result) {
-        result[0] = a[1] * b[2] - a[2] * b[1];
-        result[1] = a[2] * b[0] - a[0] * b[2];
-        result[2] = a[0] * b[1] - a[1] * b[0];
+    float rotateYz(float y, float z, float angle) {
+        float cos = cos(toRadians(angle));
+        float sin = sin(toRadians(angle));
+        return y * sin + z * cos;
+    }
+
+    float rotateZx(float x, float y, float angle) {
+        float cos = cos(toRadians(angle));
+        float sin = sin(toRadians(angle));
+        return x * cos + y * sin;
+    }
+
+    float rotateZy(float x, float y, float angle) {
+        float cos = cos(toRadians(angle));
+        float sin = sin(toRadians(angle));
+        return x * sin + y * cos; //возможно тут -x или -y
     }
 
     float length(float[] v) {
