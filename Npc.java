@@ -1,6 +1,3 @@
-import greenfoot.Color;
-
-import java.util.ArrayList;
 import java.util.Random;
 import java.util.Stack;
 
@@ -45,6 +42,6 @@ public class Npc extends Creature {
 
     void randomMove() {
         rotateXn((r.nextFloat() - 0.5f) * 30);
-        moveSpeed = r.nextFloat() / 4;
+        speedXZ = r.nextFloat() / 4;
     }
 }

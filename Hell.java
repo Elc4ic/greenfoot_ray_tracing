@@ -5,7 +5,8 @@ import java.io.IOException;
 
 public class Hell extends WorldBase {
 
-    public Hell() {
+    public Hell() throws IOException {
+        super();
         try {
             Texture portalTexture = new Texture("D:\\C_project\\Raytracer\\images\\portal.png");
             Texture flagTexture = new Texture("D:\\C_project\\Raytracer\\images\\flag.png");
@@ -23,7 +24,7 @@ public class Hell extends WorldBase {
 
             getObjects().add(new ObjFile(
                     new float[]{3, 0, 6},
-                    4f,
+                    10f,
                     ColorOperation.GColorToInt(new Color(130, 130, 130)),
                     "D:\\C_project\\Raytracer\\models\\plate.obj",
                     true,

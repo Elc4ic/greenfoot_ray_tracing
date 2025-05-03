@@ -3,8 +3,8 @@ import java.io.IOException;
 public class Portal extends ObjFile {
     private WorldBase to;
 
-    public Portal(float[] pos, float scale, int color, String filePath, boolean hasTexture, int textureIndex, WorldBase world) throws IOException {
-        super(pos, scale, color, filePath, hasTexture, textureIndex);
+    public Portal(float[] pos, float scale, int color, boolean hasTexture, int textureIndex, WorldBase world) throws IOException {
+        super(pos, scale, color, "D:\\C_project\\Raytracer\\models\\portal.obj", hasTexture, textureIndex);
         this.to = world;
     }
 

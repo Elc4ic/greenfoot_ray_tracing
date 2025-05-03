@@ -7,11 +7,14 @@ public class Creature extends Cube {
     int state = 1;
     int step = 1;
     float[] normal;
-    float moveSpeed = 0;
-    float moveSpeedMax = 0.3f;
+    float speedXZ = 0;
+    float speedY = 0;
+    float speedMaxXZ = 0.3f;
+    float speedMaxY = 3f;
     float rotationSpeed = 1;
     float hitBoxRadius;
     DVector collisionResistV = new DVector();
+    private Timer time = new Timer(30000000000L);
     int portalEnter = 0;
 
     public Creature(float[] pos, float x, float y, float z, float[] normal, int color, float hitBoxRadius) {
@@ -30,6 +33,10 @@ public class Creature extends Cube {
         for (WorldObject o : world.getObjects()) {
             boolean col = o.getCollision(getPos(), hitBoxRadius);
             if (col) {
+                if (o instanceof TimeSphere timeSphere) {
+                    time.addTime(timeSphere.takeTime());
+                    world.deleteObject(timeSphere);
+                }
                 if (o instanceof Portal portal) {
                     portalEnter = portalEnter < 2 ? ++portalEnter : 2;
                     if (portalEnter == 1) {
@@ -50,12 +57,17 @@ public class Creature extends Cube {
         }
     }
 
+    void jump() {
+        if (state == 4) return;
+        speedY = speedMaxY;
+        state = 4;
+    }
 
     void updatePos() {
-        if (moveSpeed == 0 || state == 0) return;
-        setPos(Vector3.add(getPos(), Vector3.resist(Vector3.scale(normal, moveSpeed), collisionResistV)));
-        if (Math.abs(moveSpeed) > moveSpeedMax / 4) moveSpeed -= Math.signum(moveSpeed) * moveSpeedMax / 4;
-        else moveSpeed = 0;
+        if (speedXZ == 0 || state == 0) return;
+        setPos(Vector3.add(getPos(), Vector3.resist(Vector3.scale(normal, speedXZ), collisionResistV)));
+        if (Math.abs(speedXZ) > speedMaxXZ / 4) speedXZ -= Math.signum(speedXZ) * speedMaxXZ / 4;
+        else speedXZ = 0;
     }
 
     void updateState() {
@@ -81,19 +93,19 @@ public class Creature extends Cube {
     }
 
     void moveForward() {
-        moveSpeed = moveSpeedMax;
+        speedXZ = speedMaxXZ;
     }
 
     void moveBackward() {
-        moveSpeed = -moveSpeedMax;
+        speedXZ = -speedMaxXZ;
     }
 
     void moveLeft() {
-        moveSpeed = moveSpeedMax;
+        speedXZ = speedMaxXZ;
     }
 
     void moveRight() {
-        moveSpeed = moveSpeedMax;
+        speedXZ = speedMaxXZ;
     }
 
 
@@ -107,6 +119,10 @@ public class Creature extends Cube {
 
     int getHealth() {
         return health;
+    }
+
+    Timer getTimer() {
+        return time;
     }
 
     void setHealth(int damage) {

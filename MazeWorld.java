@@ -10,7 +10,8 @@ public class MazeWorld extends WorldBase {
     private int endX, endY;
     private int sellSize = 3;
 
-    public MazeWorld(Hero hero) {
+    public MazeWorld(Hero hero) throws IOException {
+        super();
         this.hero = hero;
 //        super(hero);
         maze.printMap();

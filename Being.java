@@ -3,21 +3,21 @@ import greenfoot.Color;
 import java.io.IOException;
 
 public class Being extends WorldBase {
-    public Being() {
-//        super(hero);
+    public Being() throws IOException {
+        super();
         try {
-            Texture wallTexture = new Texture("D:\\C_project\\Raytracer\\images\\wall.png");
+            Texture mapTexture = new Texture("D:\\C_project\\Raytracer\\images\\map.png");
             Texture badanTexture = new Texture("D:\\C_project\\Raytracer\\images\\badan.png");
-            textureCollection.addTexture(wallTexture);
+            textureCollection.addTexture(mapTexture);
             textureCollection.addTexture(badanTexture);
 
             getObjects().add(new ObjFile(
                     new float[]{3, 0, 6},
-                    4f,
+                    10f,
                     ColorOperation.GColorToInt(new Color(130, 130, 130)),
-                    "D:\\C_project\\Raytracer\\models\\plate.obj",
+                    "D:\\C_project\\Raytracer\\models\\map.obj",
                     true,
-                    textureCollection.getIndex(wallTexture)
+                    textureCollection.getIndex(mapTexture)
             ));
             getObjects().add(new ObjFile(
                     new float[]{5, 0, 6},

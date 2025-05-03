@@ -13,6 +13,8 @@ public class ObjFile extends WorldObject {
     private final List<float[]> bounds = new ArrayList<>();
     private List<int[]> faces = new ArrayList<>();
 
+    ObjectBuffer objectBuffer;
+
     private float scale;
     private float[] pos;
     private float[] rotation = {0, 0, 0};
@@ -96,9 +98,6 @@ public class ObjFile extends WorldObject {
         for (String line : lines) {
             if (line.startsWith("v ")) {
                 String[] parts = line.split("\\s+");
-//                float x = Float.parseFloat(parts[1]) * scale + pos[0];
-//                float y = Float.parseFloat(parts[2]) * scale + pos[1];
-//                float z = Float.parseFloat(parts[3]) * scale + pos[2];
                 float x = Float.parseFloat(parts[1]) * scale;
                 float y = Float.parseFloat(parts[2]) * scale;
                 float z = Float.parseFloat(parts[3]) * scale;
@@ -135,6 +134,7 @@ public class ObjFile extends WorldObject {
         bounds.add(new float[]{maxX, maxY, maxZ});
 
         serialize(faces);
+        objectBuffer = new ObjectBuffer();
         faces.clear();
     }
 
@@ -164,83 +164,6 @@ public class ObjFile extends WorldObject {
         }
     }
 
-    public int getVertexSize() {
-        return vertices.size();
-    }
-
-    public int getTextureCoordSize() {
-        return texCoords.size();
-    }
-
-    public int getLeafIndicesSize() {
-        return leafIndices.size();
-    }
-
-    public int getFaceCount() {
-        return leafIndices.size() / 6;
-    }
-
-    public float[] getCacheBuff() {
-        float[] cacheBuff = new float[cache.size() * CACHE_SIZE];
-        for (int i = 0; i < cache.size(); i++) {
-            int ii = i * CACHE_SIZE;
-            cacheBuff[ii] = cache.get(i)[0];
-            cacheBuff[ii + 1] = cache.get(i)[1];
-            cacheBuff[ii + 2] = cache.get(i)[2];
-            cacheBuff[ii + 3] = cache.get(i)[3];
-            cacheBuff[ii + 4] = cache.get(i)[4];
-            cacheBuff[ii + 5] = cache.get(i)[5];
-            cacheBuff[ii + 6] = cache.get(i)[6];
-            cacheBuff[ii + 7] = cache.get(i)[7];
-            cacheBuff[ii + 8] = cache.get(i)[8];
-            cacheBuff[ii + 9] = cache.get(i)[9];
-            cacheBuff[ii + 10] = cache.get(i)[10];
-            cacheBuff[ii + 11] = cache.get(i)[11];
-            cacheBuff[ii + 12] = cache.get(i)[12];
-        }
-        return cacheBuff;
-    }
-
-    public float[] getVerticesBuff() {
-        float[] verticesBuff = new float[vertices.size() * 3];
-        for (int i = 0; i < vertices.size(); i++) {
-            int ii = i * 3;
-            verticesBuff[ii] = vertices.get(i)[0];
-            verticesBuff[ii + 1] = vertices.get(i)[1];
-            verticesBuff[ii + 2] = vertices.get(i)[2];
-        }
-        return verticesBuff;
-    }
-
-    public float[] getTextCoordsBuff() {
-        float[] texCoordsBuff = new float[texCoords.size() * 2];
-        for (int i = 0; i < texCoords.size(); i++) {
-            int ii = i * 2;
-            texCoordsBuff[ii] = texCoords.get(i)[0];
-            texCoordsBuff[ii + 1] = texCoords.get(i)[1];
-        }
-        return texCoordsBuff;
-    }
-
-    public int[] getLeafIndices() {
-        int[] leafIndicesBuff = new int[leafIndices.size()];
-        for (int i = 0; i < leafIndices.size(); i++) {
-            leafIndicesBuff[i] = leafIndices.get(i);
-        }
-        return leafIndicesBuff;
-    }
-
-    public float[] getBoundsBuff() {
-        float[] bvhBoundsBuff = new float[bounds.size() * 3];
-        for (int i = 0; i < bounds.size(); i++) {
-            int ii = i * 3;
-            bvhBoundsBuff[ii] = bounds.get(i)[0];
-            bvhBoundsBuff[ii + 1] = bounds.get(i)[1];
-            bvhBoundsBuff[ii + 2] = bounds.get(i)[2];
-        }
-        return bvhBoundsBuff;
-    }
-
     @Override
     public float[] getPos() {
         return pos;
@@ -254,10 +177,10 @@ public class ObjFile extends WorldObject {
         this.pos = Vector3.add(this.pos, pos);
     }
 
-    public void addToRotation(float[] pos) {
-        rotation[0] = (rotation[0] + pos[0]) % 360;
-        rotation[1] = (rotation[1] + pos[1]) % 360;
-        rotation[2] = (rotation[2] + pos[2]) % 360;
+    public void addToRotation(float[] rotor) {
+        rotation[0] = (rotation[0] + rotor[0]) % 360;
+        rotation[1] = (rotation[1] + rotor[1]) % 360;
+        rotation[2] = (rotation[2] + rotor[2]) % 360;
     }
 
     @Override
@@ -306,6 +229,73 @@ public class ObjFile extends WorldObject {
             this.d01 = Vector3.dot(edge0, edge1);
             this.d11 = Vector3.dot(edge1, edge1);
             this.denominator = d00 * d11 - d01 * d01;
+        }
+    }
+
+    class ObjectBuffer {
+        float[] verticesBuff;
+        float[] texCoordsBuff;
+        int[] leafInsidesBuff;
+        float[] boundsBuff;
+        float[] cacheBuff;
+        int[] sizes = new int[SIZES_SIZE];
+
+        private ObjectBuffer() {
+            initCacheBuff();
+            initBoundsBuff();
+            initLeafIndices();
+            initVerticesBuff();
+            initTextCoordsBuff();
+            initSizes();
+        }
+
+        private void initSizes() {
+            sizes[VERTEX_OFFSET] = vertices.size();
+            sizes[TEXT_COORD_OFFSET] = texCoords.size();
+            sizes[LEAFS_OFFSET] = leafIndices.size();
+            sizes[FACE_COUNT_OFFSET] = leafIndices.size() / 6;
+            sizes[TEXTURE_WIDTH] = 0;
+            sizes[TEXTURE_HEIGHT] = 0;
+            sizes[TEXTURE_OFFSET] = 0;
+        }
+
+        private void initCacheBuff() {
+            cacheBuff = new float[cache.size() * CACHE_SIZE];
+            for (int i = 0; i < cache.size(); i++) {
+                int ii = i * CACHE_SIZE;
+                System.arraycopy(cache.get(i), 0, cacheBuff, ii, CACHE_SIZE);
+            }
+        }
+
+        private void initVerticesBuff() {
+            verticesBuff = new float[vertices.size() * VERTEX_SIZE];
+            for (int i = 0; i < vertices.size(); i++) {
+                int ii = i * VERTEX_SIZE;
+                System.arraycopy(vertices.get(i), 0, verticesBuff, ii, VERTEX_SIZE);
+            }
+        }
+
+        private void initTextCoordsBuff() {
+            texCoordsBuff = new float[texCoords.size() * TEXTURE_COORD_SIZE];
+            for (int i = 0; i < texCoords.size(); i++) {
+                int ii = i * TEXTURE_COORD_SIZE;
+                System.arraycopy(texCoords.get(i), 0, texCoordsBuff, ii, TEXTURE_COORD_SIZE);
+            }
+        }
+
+        private void initLeafIndices() {
+            leafInsidesBuff = new int[leafIndices.size()];
+            for (int i = 0; i < leafIndices.size(); i++) {
+                leafInsidesBuff[i] = leafIndices.get(i);
+            }
+        }
+
+        private void initBoundsBuff() {
+            boundsBuff = new float[bounds.size() * 3];
+            for (int i = 0; i < bounds.size(); i++) {
+                int ii = i * 3;
+                System.arraycopy(bounds.get(i), 0, boundsBuff, ii, 3);
+            }
         }
     }
 }

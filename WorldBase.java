@@ -15,19 +15,25 @@ public class WorldBase {
     private WorldObject winShape;
     public TextureCollection textureCollection = new TextureCollection();
     public WorldBase newWorld;
+    private int maxTimeSpheres = 20;
+    private int maxTimeCounter = 0;
     public boolean needChangeWorld = false;
+    public boolean needUpdateBuffers = false;
+    Texture portalTexture = new Texture("D:\\C_project\\Raytracer\\images\\portal.png");
+    Texture orbTexture = new Texture("D:\\C_project\\Raytracer\\images\\orb.png");
 
-//    public WorldBase(Hero hero) {
-//        this.hero = hero;
-//    }
+    public WorldBase() throws IOException {
+        textureCollection.addTexture(portalTexture);
+        textureCollection.addTexture(orbTexture);
+    }
 
-    public void update() {
+    public void update() throws IOException {
         for (WorldObject o : objects) {
-            if (o instanceof Npc) {
-                if (((Npc) o).updateNpc(objectsOnAdd, this)) objectsOnDestroy.add(o);
+            if (o instanceof Npc npc) {
+                if (npc.updateNpc(objectsOnAdd, this)) objectsOnDestroy.add(o);
             }
-            if (o instanceof ObjFile obj) {
-                obj.addToRotation(new float[]{5f, 0, 0});
+            if (o instanceof Portal obj) {
+//                obj.addToRotation(new float[]{5f, 0, 0});
 //                obj.addToPos(new float[]{0.1f, 0, 0});
             }
             if (o instanceof Bullet) {
@@ -45,6 +51,7 @@ public class WorldBase {
                     objectsOnDestroy.add(o);
                 }
             }
+            if (r.nextInt(100) == 1) addTimeSphere();
         }
         while (!objectsOnAdd.empty()) {
             objects.add(objectsOnAdd.pop());
@@ -55,18 +62,35 @@ public class WorldBase {
     }
 
     public void addPortal(WorldBase world) throws IOException {
-        Texture portalTexture = new Texture("D:\\C_project\\Raytracer\\images\\portal.png");
-        textureCollection.addTexture(portalTexture);
-
+        needUpdateBuffers = true;
         objects.add(new Portal(
                 new float[]{7, 0, 3},
                 2f,
                 ColorOperation.GColorToInt(new Color(130, 130, 130)),
-                "D:\\C_project\\Raytracer\\models\\portal.obj",
                 true,
                 textureCollection.getIndex(portalTexture),
                 world)
         );
+    }
+
+    public void addTimeSphere() throws IOException {
+        if (maxTimeCounter >= maxTimeSpheres) return;
+        needUpdateBuffers = true;
+        objectsOnAdd.add(new TimeSphere(
+                new float[]{r.nextInt(50) - 25, 1, r.nextInt(50) - 25},
+                2f,
+                ColorOperation.GColorToInt(new Color(130, 130, 130)),
+                true,
+                textureCollection.getIndex(orbTexture),
+                r.nextInt(5) * 1000000000L)
+        );
+        maxTimeCounter++;
+    }
+
+    public void deleteObject(WorldObject o) {
+        if (o instanceof TimeSphere) maxTimeCounter--;
+        needUpdateBuffers = true;
+        objectsOnDestroy.add(o);
     }
 
     public GreenfootImage getLoadScreen() {

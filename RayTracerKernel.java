@@ -93,11 +93,11 @@ public class RayTracerKernel extends Kernel {
         float maxY = bounds[boundIndex + ObjFile.BVH_BOUND_MAX_Y] + posY;
         float maxZ = bounds[boundIndex + ObjFile.BVH_BOUND_MAX_Z] + posZ;
 
-        minX = rotateXx(minX, minZ, rotations[oI * ObjFile.ROTATION_SIZE + ObjFile.ROTATION_X]);
-        minZ = rotateXz(minX, minZ, rotations[oI * ObjFile.ROTATION_SIZE + ObjFile.ROTATION_X]);
-
-        maxX = rotateXx(maxX, maxZ, rotations[oI * ObjFile.ROTATION_SIZE + ObjFile.ROTATION_X]);
-        maxZ = rotateXz(maxX, maxZ, rotations[oI * ObjFile.ROTATION_SIZE + ObjFile.ROTATION_X]);
+//        minX = rotateXx(minX, minZ, rotations[oI * ObjFile.ROTATION_SIZE + ObjFile.ROTATION_X]);
+//        minZ = rotateXz(minX, minZ, rotations[oI * ObjFile.ROTATION_SIZE + ObjFile.ROTATION_X]);
+//
+//        maxX = rotateXx(maxX, maxZ, rotations[oI * ObjFile.ROTATION_SIZE + ObjFile.ROTATION_X]);
+//        maxZ = rotateXz(maxX, maxZ, rotations[oI * ObjFile.ROTATION_SIZE + ObjFile.ROTATION_X]);
 
         float t1 = (minX - ox) / dx;
         float t2 = (maxX - ox) / dx;
@@ -134,8 +134,8 @@ public class RayTracerKernel extends Kernel {
         float v0y = vertices[off_V + v1I + ObjFile.VERTEX_Y] + posY;
         float v0z = vertices[off_V + v1I + ObjFile.VERTEX_Z] + posZ;
 
-        v0x = rotateXx(v0x, v0z, rotations[oI * ObjFile.ROTATION_SIZE + ObjFile.ROTATION_X]);
-        v0z = rotateXz(v0x, v0z, rotations[oI * ObjFile.ROTATION_SIZE + ObjFile.ROTATION_X]);
+//        v0x = rotateXx(v0x, v0z, rotations[oI * ObjFile.ROTATION_SIZE + ObjFile.ROTATION_X]);
+//        v0z = rotateXz(v0x, v0z, rotations[oI * ObjFile.ROTATION_SIZE + ObjFile.ROTATION_X]);
 
         float e1x = cache[c_I + ObjFile.EDGE_1_X];
         float e1y = cache[c_I + ObjFile.EDGE_1_Y];
@@ -194,8 +194,8 @@ public class RayTracerKernel extends Kernel {
         float v0y = vertices[o_V + v1I + ObjFile.VERTEX_Y] + posY;
         float v0z = vertices[o_V + v1I + ObjFile.VERTEX_Z] + posZ;
 
-        v0x = rotateXx(v0x, v0z, rotations[oI * ObjFile.POS_SIZE + ObjFile.POS_X]);
-        v0z = rotateXz(v0x, v0z, rotations[oI * ObjFile.POS_SIZE + ObjFile.POS_X]);
+//        v0x = rotateXx(v0x, v0z, rotations[oI * ObjFile.POS_SIZE + ObjFile.POS_X]);
+//        v0z = rotateXz(v0x, v0z, rotations[oI * ObjFile.POS_SIZE + ObjFile.POS_X]);
 
         float hitX = ox + t * dx;
         float hitY = oy + t * dy;

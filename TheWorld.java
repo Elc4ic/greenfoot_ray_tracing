@@ -5,6 +5,7 @@ import greenfoot.*;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
 
 
@@ -43,9 +44,10 @@ public class TheWorld extends World {
 
         interface1 = new Interface(hero, fPSCounter);
         addObject(interface1, interface1.getImg().getWidth() / 2, Const.SCALED_HEIGHT - interface1.getImg().getHeight() / 2);
-//        for (Gun g : hero.arsenal) {
-//            addObject(g, g.x, g.y);
-//        }
+        addObject(hero.getTimer(), Const.SCALED_WIDTH / 2, 20);
+        for (Gun g : hero.arsenal) {
+            addObject(g, g.x, g.y);
+        }
 
         loadScreen();
         hell.addPortal(being);
@@ -56,11 +58,6 @@ public class TheWorld extends World {
 
     void initWorld() {
         initStaticDataFromObjects(worldBase.getObjects());
-        kernel = new RayTracerKernel(
-                positions, rotations, sizes, bounds, cache, vertices, texCoords, leafInsides, texture, output, rays
-        );
-        kernel.setExecutionModeWithoutFallback(Kernel.EXECUTION_MODE.JTP);
-        kernel.setExplicit(true);
         System.gc();
     }
 
@@ -69,7 +66,7 @@ public class TheWorld extends World {
     }
 
     public void act() {
-        if (hero.state == 0) {
+        if (hero.state == 0 || hero.getTimer().isZero()) {
             lose();
         } else if (hero.state == -1) {
             win();
@@ -90,11 +87,11 @@ public class TheWorld extends World {
             if (Greenfoot.isKeyDown("i") && worldBase instanceof MazeWorld world) {
                 world.getHeroNormal();
             }
-            if (Greenfoot.isKeyDown("9")) {
-                loadScreen();
-                worldBase = new MazeWorld(hero);
-                initWorld();
-            }
+//            if (Greenfoot.isKeyDown("9")) {
+//                loadScreen();
+//                worldBase = new MazeWorld(hero);
+//                initWorld();
+//            }
             if (Greenfoot.isKeyDown("7")) {
                 loadScreen();
                 worldBase = hell;
@@ -127,15 +124,23 @@ public class TheWorld extends World {
                 hero.switchGun(3);
             }
 
-            render();
-
-            worldBase.update();
-
+            if (worldBase.needUpdateBuffers) {
+                initWorld();
+            }
             if (worldBase.isNeedChangeWorld()) {
-//                loadScreen();
+                loadScreen();
                 worldBase = worldBase.getNewWorld();
                 initWorld();
             }
+
+            render();
+
+            try {
+                worldBase.update();
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+
 
             hero.updateHero(worldBase);
             hero.winCondition(worldBase.getWinShape());
@@ -143,7 +148,6 @@ public class TheWorld extends World {
         }
         fPSCounter.update();
     }
-
 
     private void initStaticDataFromObjects(ArrayList<WorldObject> objects) {
         //init sizes
@@ -157,11 +161,11 @@ public class TheWorld extends World {
                 sizes[nOfObj * ObjFile.SIZES_SIZE + ObjFile.VERTEX_OFFSET] = sizeNode[ObjFile.VERTEX_OFFSET];
                 sizes[nOfObj * ObjFile.SIZES_SIZE + ObjFile.TEXT_COORD_OFFSET] = sizeNode[ObjFile.TEXT_COORD_OFFSET];
                 sizes[nOfObj * ObjFile.SIZES_SIZE + ObjFile.LEAFS_OFFSET] = sizeNode[ObjFile.LEAFS_OFFSET];
-                sizes[nOfObj * ObjFile.SIZES_SIZE + ObjFile.FACE_COUNT_OFFSET] = obj.getFaceCount();
+                sizes[nOfObj * ObjFile.SIZES_SIZE + ObjFile.FACE_COUNT_OFFSET] = obj.objectBuffer.sizes[ObjFile.FACE_COUNT_OFFSET];
                 sizes[nOfObj * ObjFile.SIZES_SIZE + ObjFile.TEXTURE_OFFSET] = sizeNode[ObjFile.TEXTURE_OFFSET];
-                sizeNode[ObjFile.VERTEX_OFFSET] += obj.getVertexSize();
-                sizeNode[ObjFile.TEXT_COORD_OFFSET] += obj.getTextureCoordSize();
-                sizeNode[ObjFile.LEAFS_OFFSET] += obj.getLeafIndicesSize();
+                sizeNode[ObjFile.VERTEX_OFFSET] += obj.objectBuffer.verticesBuff.length;
+                sizeNode[ObjFile.TEXT_COORD_OFFSET] += obj.objectBuffer.texCoordsBuff.length;
+                sizeNode[ObjFile.LEAFS_OFFSET] += obj.objectBuffer.leafInsidesBuff.length;
 
                 Texture texture = worldBase.textureCollection.getTexture(obj.textureIndex);
                 int offset = worldBase.textureCollection.getOffset(obj.textureIndex);
@@ -183,11 +187,11 @@ public class TheWorld extends World {
         nOfObj = 0;
         for (WorldObject object : objects) {
             if (object instanceof ObjFile obj) {
-                float[] bvhb = obj.getBoundsBuff();
-                float[] cacheBuff = obj.getCacheBuff();
-                int[] leaf = obj.getLeafIndices();
-                float[] vertex = obj.getVerticesBuff();
-                float[] t_coord = obj.getTextCoordsBuff();
+                float[] bvhb = obj.objectBuffer.boundsBuff;
+                float[] cacheBuff = obj.objectBuffer.cacheBuff;
+                int[] leaf = obj.objectBuffer.leafInsidesBuff;
+                float[] vertex = obj.objectBuffer.verticesBuff;
+                float[] t_coord = obj.objectBuffer.texCoordsBuff;
 
                 System.arraycopy(vertex, 0, vertices, sizes[nOfObj * ObjFile.SIZES_SIZE + ObjFile.VERTEX_OFFSET] * 3, vertex.length);
                 System.arraycopy(t_coord, 0, texCoords, sizes[nOfObj * ObjFile.SIZES_SIZE + ObjFile.TEXT_COORD_OFFSET] * 2, t_coord.length);
@@ -210,6 +214,12 @@ public class TheWorld extends World {
         initPosition(worldBase.getObjects());
         initRays();
 
+        kernel = new RayTracerKernel(
+                positions, rotations, sizes, bounds, cache, vertices, texCoords, leafInsides, texture, output, rays
+        );
+        kernel.setExecutionModeWithoutFallback(Kernel.EXECUTION_MODE.GPU);
+        kernel.setExplicit(true);
+
         kernel.put(sizes);
         kernel.put(bounds);
         kernel.put(cache);
@@ -231,6 +241,10 @@ public class TheWorld extends World {
         kernel.dispose();
         frame.scale(Const.SCALED_WIDTH, Const.SCALED_HEIGHT);
         setBackground(frame);
+    }
+
+    private void initDynamicDataFromObjects(ArrayList<WorldObject> objects) {
+
     }
 
     private void initRotation(ArrayList<WorldObject> objects) {

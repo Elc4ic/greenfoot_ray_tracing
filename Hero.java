@@ -1,6 +1,3 @@
-import greenfoot.Color;
-
-import java.util.ArrayList;
 import java.util.Random;
 
 public class Hero extends Creature {
@@ -31,7 +28,7 @@ public class Hero extends Creature {
     }
 
     void updateHero(WorldBase worldBase) {
-        shake((int) (moveSpeed * 6) + 4);
+        shake((int) (speedXZ * 6) + 4);
         updateGun();
         checkCollision(worldBase, true);
         updatePos();
