@@ -178,10 +178,16 @@ public class ObjFile extends WorldObject {
     }
 
     public void addToRotation(float[] rotor) {
-        rotation[0] = (rotation[0] + rotor[0]) % 360;
-        rotation[1] = (rotation[1] + rotor[1]) % 360;
-        rotation[2] = (rotation[2] + rotor[2]) % 360;
+        float radX = (float) Math.toRadians(rotor[0]);
+        float radY = (float) Math.toRadians(rotor[1]);
+        float radZ = (float) Math.toRadians(rotor[2]);
+        float twoPI = (float) (2 * Math.PI);
+
+        rotation[0] = (rotation[0] + radX) % twoPI;
+        rotation[1] = (rotation[1] + radY) % twoPI;
+        rotation[2] = (rotation[2] + radZ) % twoPI;
     }
+
 
     @Override
     public Intersection getIntersection(Ray ray) {

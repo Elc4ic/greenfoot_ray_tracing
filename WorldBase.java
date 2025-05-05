@@ -33,8 +33,11 @@ public class WorldBase {
                 if (npc.updateNpc(objectsOnAdd, this)) objectsOnDestroy.add(o);
             }
             if (o instanceof Portal obj) {
-//                obj.addToRotation(new float[]{5f, 0, 0});
+                obj.addToRotation(new float[]{0f, 5, 0});
 //                obj.addToPos(new float[]{0.1f, 0, 0});
+            }
+            if (o instanceof TimeSphere obj) {
+                obj.addToRotation(new float[]{0f, 2, 0});
             }
             if (o instanceof Bullet) {
                 if (((Bullet) o).update()) {

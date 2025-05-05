@@ -14,7 +14,7 @@ public class Creature extends Cube {
     float rotationSpeed = 1;
     float hitBoxRadius;
     DVector collisionResistV = new DVector();
-    private Timer time = new Timer(30000000000L);
+    private Timer time = new Timer(300000000000L);
     int portalEnter = 0;
 
     public Creature(float[] pos, float x, float y, float z, float[] normal, int color, float hitBoxRadius) {

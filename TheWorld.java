@@ -243,10 +243,6 @@ public class TheWorld extends World {
         setBackground(frame);
     }
 
-    private void initDynamicDataFromObjects(ArrayList<WorldObject> objects) {
-
-    }
-
     private void initRotation(ArrayList<WorldObject> objects) {
         int nOfObj = 0;
         for (WorldObject object : objects) {
