@@ -1,85 +1,132 @@
 import greenfoot.Color;
 
-public class Creature extends Cube {
-    int health = 100;
-    int healthMax = 100;
-    // 0- die, 1 - alive, 2 - take damage, 3 - take heal
-    int state = 1;
-    int step = 1;
-    float[] normal;
-    float speedXZ = 0;
-    float speedY = 0;
-    float speedMaxXZ = 0.3f;
-    float speedMaxY = 3f;
-    float rotationSpeed = 1;
-    float hitBoxRadius;
-    DVector collisionResistV = new DVector();
-    private Timer time = new Timer(300000000000L);
-    int portalEnter = 0;
+import java.io.IOException;
+import java.util.Arrays;
 
-    public Creature(float[] pos, float x, float y, float z, float[] normal, int color, float hitBoxRadius) {
-        super(pos, x, y, z, color);
+public class Creature extends ObjFile {
+    private static final float GRAVITY = 0.4f;
+    private static final int STATE_DEAD = 0;
+    private static final int STATE_ALIVE = 1;
+    private static final int STATE_DAMAGE = 2;
+    private static final int STATE_HEAL = 3;
+
+    private int health = 100;
+    private final int healthMax = 100;
+    int state = STATE_ALIVE;
+    private int step = 1;
+
+    private float[] normal;
+    float speedXZ = 0;
+    private float speedY = 0;
+    private boolean onGround = true;
+    private final float speedMaxXZ = 1f;
+    private final float speedMaxY = 1.6f;
+    private final float rotationSpeed = 1;
+    final float hitBoxRadius;
+    private final DVector collisionResistance = new DVector();
+    private final Timer timer = new Timer(100000000000L);
+    private int portalEnterCounter = 0;
+
+    public Creature(float[] pos, float scale, float[] normal,String objFile, int color, float hitBoxRadius, boolean hasTexture, int textureIndex) throws IOException {
+        super(pos, scale, color, objFile, hasTexture, textureIndex);
         this.normal = Vector3.normalize(normal);
         this.hitBoxRadius = hitBoxRadius;
     }
 
     public void update(WorldBase world) {
         checkCollision(world, true);
-        updatePos();
+        updatePosition();
+        updateState();
     }
 
-    void checkCollision(WorldBase world, boolean bulletCol) {
-        collisionResistV.clear();
+    void checkCollision(WorldBase world, boolean bulletCollisionEnabled) {
+        collisionResistance.clear();
+
         for (WorldObject o : world.getObjects()) {
-            boolean col = o.getCollision(getPos(), hitBoxRadius);
-            if (col) {
-                if (o instanceof TimeSphere timeSphere) {
-                    time.addTime(timeSphere.takeTime());
-                    world.deleteObject(timeSphere);
-                }
-                if (o instanceof Portal portal) {
-                    portalEnter = portalEnter < 2 ? ++portalEnter : 2;
-                    if (portalEnter == 1) {
-                        System.out.println(portalEnter);
-                        world.newWorld = portal.changeWorld();
-                        world.needChangeWorld = true;
-                    }
-                }
-                if (o instanceof Bullet && bulletCol) {
-                    setHealth(-((Bullet) o).getDamage());
-                    ((Bullet) o).addPenetration();
-                }
-//                collisionResistV.setAdsMax(o.getNormal(getPos(), hitBoxRadius));
+
+            if (o.getCollision(getPos(), hitBoxRadius)) {
+                handleCollision(o, world, bulletCollisionEnabled);
+
+//                float[] normal = o.getNormal(getPos(), hitBoxRadius);
+//                collisionResistance.setAdsMax(normal);
+
+            } else if (o instanceof Portal) {
+                portalEnterCounter = 0;
             }
-            if (!col && o instanceof Portal) {
-                portalEnter = 0;
+        }
+
+    }
+
+    private void handleCollision(WorldObject o, WorldBase world, boolean bulletCollisionEnabled) {
+        if (o instanceof TimeSphere timeSphere) {
+            timer.addTime(timeSphere.takeTime());
+            world.deleteObject(timeSphere);
+        } else if (o instanceof Portal portal) {
+            if (portalEnterCounter < 2) portalEnterCounter++;
+            if (portalEnterCounter == 1) {
+                world.newWorld = portal.changeWorld();
+                world.needChangeWorld = true;
             }
+        } else if (o instanceof Bullet bullet && bulletCollisionEnabled) {
+            applyDamage(-bullet.getDamage());
+            bullet.addPenetration();
         }
     }
 
-    void jump() {
-        if (state == 4) return;
-        speedY = speedMaxY;
-        state = 4;
+    private void updatePosition() {
+        if (speedXZ == 0 && speedY == 0 || state == STATE_DEAD) return;
+
+        float[] horizontalOffset = Vector3.resist(Vector3.scale(normal, speedXZ), collisionResistance);
+        float[] verticalOffset = Vector3.scale(new float[]{0, 1, 0}, speedY);
+
+        addToPos(horizontalOffset);
+        addToPos(verticalOffset);
+
+        applyGravity();
+        applyFriction();
     }
 
-    void updatePos() {
-        if (speedXZ == 0 || state == 0) return;
-        setPos(Vector3.add(getPos(), Vector3.resist(Vector3.scale(normal, speedXZ), collisionResistV)));
-        if (Math.abs(speedXZ) > speedMaxXZ / 4) speedXZ -= Math.signum(speedXZ) * speedMaxXZ / 4;
-        else speedXZ = 0;
+    private void applyGravity() {
+        System.out.println(speedY);
+        if (getPos()[1] > 1f) {
+            speedY -= GRAVITY;
+        } else {
+            float y = getPos()[1];
+            addToPos(new float[]{0, -y + 1f, 0});
+            onGround = true;
+            speedY = 0;
+        }
     }
 
-    void updateState() {
-        if (state == 1 || state == 0) return;
-        if ((state == 2 || state == 3) && step < 5) {
+    private void applyFriction() {
+        if (Math.abs(speedXZ) > speedMaxXZ / 4) {
+            speedXZ -= Math.signum(speedXZ) * speedMaxXZ / 4;
+        } else {
+            speedXZ = 0;
+        }
+    }
+
+    private void updateState() {
+        if (state == STATE_ALIVE || state == STATE_DEAD) return;
+
+        if ((state == STATE_DAMAGE || state == STATE_HEAL) && step < 5) {
             step++;
         } else {
-            float h = (float) 255 * health / healthMax;
-            setColor((int) h << 8);
-            state = 1;
+            updateColorByHealth();
+            state = STATE_ALIVE;
             step = 0;
         }
+    }
+
+    private void updateColorByHealth() {
+        float intensity = 255f * health / healthMax;
+        setColor((int) intensity << 8);
+    }
+
+    public void jump() {
+        if (!onGround) return;
+        speedY = speedMaxY;
+        onGround = false;
     }
 
     void rotateYn(float angle) {
@@ -88,8 +135,10 @@ public class Creature extends Cube {
     }
 
     void rotateXn(float angle) {
+        addToRotation(new float[]{0, -angle, 0});
         Vector3.rotateX(normal, angle * rotationSpeed);
         normal = Vector3.normalize(normal);
+
     }
 
     void moveForward() {
@@ -101,11 +150,10 @@ public class Creature extends Cube {
     }
 
     void moveLeft() {
-        speedXZ = speedMaxXZ;
+
     }
 
     void moveRight() {
-        speedXZ = speedMaxXZ;
     }
 
 
@@ -122,23 +170,19 @@ public class Creature extends Cube {
     }
 
     Timer getTimer() {
-        return time;
+        return timer;
     }
 
-    void setHealth(int damage) {
-        this.health += damage;
-        if (this.health <= 0) {
+    public void applyDamage(int deltaHealth) {
+        health += deltaHealth;
+        if (health <= 0) {
             setColor(ColorOperation.GColorToInt(Color.GRAY));
-            state = 0;
+            state = STATE_DEAD;
             return;
         }
-        if (damage < 0) {
-            state = 2;
-            setColor(ColorOperation.GColorToInt(Color.RED));
-        } else {
-            state = 3;
-            setColor(ColorOperation.GColorToInt(Color.BLUE));
-        }
+
+        state = (deltaHealth < 0) ? STATE_DAMAGE : STATE_HEAL;
+        setColor(ColorOperation.GColorToInt(deltaHealth < 0 ? Color.RED : Color.BLUE));
     }
 
     int getHealthMax() {
@@ -152,16 +196,24 @@ class DVector {
     float[] neg_v = new float[]{0, 0, 0};
 
     void clear() {
-        Vector3.clear(pos_v);
-        Vector3.clear(neg_v);
+        Arrays.fill(pos_v, 0);
+        Arrays.fill(neg_v, 0);
     }
 
     void setAdsMax(float[] v) {
-        if (v[0] < 0) Vector3.setAdsMaxX(neg_v, v[0]);
-        else Vector3.setAdsMaxX(pos_v, v[0]);
-        if (v[1] < 0) Vector3.setAdsMaxY(neg_v, v[1]);
-        else Vector3.setAdsMaxY(pos_v, v[1]);
-        if (v[2] < 0) Vector3.setAdsMaxZ(neg_v, v[2]);
-        else Vector3.setAdsMaxZ(pos_v, v[2]);
+        pos_v[0] = Math.max(pos_v[0], Math.max(0, v[0]));
+        neg_v[0] = Math.min(neg_v[0], Math.min(0, v[0]));
+        pos_v[1] = Math.max(pos_v[1], Math.max(0, v[1]));
+        neg_v[1] = Math.min(neg_v[1], Math.min(0, v[1]));
+        pos_v[2] = Math.max(pos_v[2], Math.max(0, v[2]));
+        neg_v[2] = Math.min(neg_v[2], Math.min(0, v[2]));
+    }
+
+    float[] getTotalResistance() {
+        return new float[]{
+                pos_v[0] + neg_v[0],
+                pos_v[1] + neg_v[1],
+                pos_v[2] + neg_v[2]
+        };
     }
 }

@@ -5,8 +5,8 @@ import java.io.IOException;
 
 public class Hell extends WorldBase {
 
-    public Hell() throws IOException {
-        super();
+    public Hell(Hero hero) throws IOException {
+        super(hero);
         try {
             Texture portalTexture = new Texture("D:\\C_project\\Raytracer\\images\\portal.png");
             Texture flagTexture = new Texture("D:\\C_project\\Raytracer\\images\\flag.png");

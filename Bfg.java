@@ -92,17 +92,6 @@ public class Bfg extends Gun {
         }
     }
 
-    void explode(Stack<WorldObject> objectsOnAdd, Bullet o) {
-        for (int i = 0; i < 100; i++) {
-            float[] n = Vector3.normalize(new float[]{r.nextFloat() - 0.5f, r.nextFloat() - 0.5f, r.nextFloat() - 0.5f});
-            objectsOnAdd.add(new Bullet(
-                    o.getPos(),
-                    0.3f, ColorOperation.green,
-                    n, 1, 30, 3, 1)
-            );
-        }
-    }
-
     @Override
     public void show(boolean active) {
         if (active) state = 0;

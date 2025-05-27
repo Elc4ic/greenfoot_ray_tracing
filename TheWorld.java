@@ -12,10 +12,10 @@ import java.util.List;
 public class TheWorld extends World {
 
     private final Interface interface1;
-    private final Hero hero = new Hero(new float[]{3, 1.4f, 3}, new float[]{1, 0, 1}, 45);
+    private final Hero hero = new Hero(new float[]{3, 1, 3}, 0.5f, new float[]{1, 0, 1}, 45, false, 1);
 
-    private final WorldBase hell = new Hell();
-    private final WorldBase being = new Being();
+    private final WorldBase hell = new Hell(hero);
+    private final WorldBase being = new Being(hero);
 
     private WorldBase worldBase = hell;
 
@@ -78,20 +78,14 @@ public class TheWorld extends World {
                 int mx = Const.SCALED_WIDTH / 2 - x;
                 int my = y - Const.SCALED_HEIGHT / 2;
                 hero.rotateXn(mx / 10f);
+
 //                hero.rotateYn(my / 10.0);
             }
 
             if (Greenfoot.isKeyDown("a")) {
                 hero.moveRight();
             }
-            if (Greenfoot.isKeyDown("i") && worldBase instanceof MazeWorld world) {
-                world.getHeroNormal();
-            }
-//            if (Greenfoot.isKeyDown("9")) {
-//                loadScreen();
-//                worldBase = new MazeWorld(hero);
-//                initWorld();
-//            }
+
             if (Greenfoot.isKeyDown("7")) {
                 loadScreen();
                 worldBase = hell;
@@ -110,6 +104,9 @@ public class TheWorld extends World {
             }
             if (Greenfoot.isKeyDown("s")) {
                 hero.moveBackward();
+            }
+            if (Greenfoot.isKeyDown("z")) {
+                hero.jump();
             }
             if (Greenfoot.isKeyDown("1")) {
                 hero.switchGun(0);
@@ -266,12 +263,13 @@ public class TheWorld extends World {
     }
 
     private void initRays() {
+        float[] cameraNormal = Vector3.normalize(Vector3.add(hero.getNormal(), new float[]{0, -0.25f, 0}));
+        float[] heroPos = Vector3.add(hero.getPos(), Vector3.scale(cameraNormal, -4));
         for (int x = 0; x < Const.WIDTH; x++) {
             for (int y = 0; y < Const.HEIGHT; y++) {
                 float u = (x + 0.5f) / Const.WIDTH * 2 - 1;
                 float v = 1 - (y + 0.5f) / Const.HEIGHT * 2;
-                float[] rayDir = Vector3.normalize(Vector3.add(hero.getNormal(), hero.getOffset(u, v)));
-                float[] heroPos = hero.getPos();
+                float[] rayDir = Vector3.normalize(Vector3.add(cameraNormal, hero.getOffset(cameraNormal, u, v)));
                 int i = (y * Const.WIDTH + x) * 6;
                 rays[i] = heroPos[0];
                 rays[i + 1] = heroPos[1];

@@ -194,6 +194,8 @@ public class ObjFile extends WorldObject {
         return noIntersection();
     }
 
+
+
     @Override
     public boolean getCollision(float[] pos, float radius) {
         return false;

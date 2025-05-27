@@ -15,20 +15,22 @@ public class WorldBase {
     private WorldObject winShape;
     public TextureCollection textureCollection = new TextureCollection();
     public WorldBase newWorld;
-    private int maxTimeSpheres = 20;
+    private int maxTimeSpheres = 150;
     private int maxTimeCounter = 0;
     public boolean needChangeWorld = false;
     public boolean needUpdateBuffers = false;
     Texture portalTexture = new Texture("D:\\C_project\\Raytracer\\images\\portal.png");
     Texture orbTexture = new Texture("D:\\C_project\\Raytracer\\images\\orb.png");
 
-    public WorldBase() throws IOException {
+    public WorldBase(Hero hero) throws IOException {
+        objects.add(hero);
         textureCollection.addTexture(portalTexture);
         textureCollection.addTexture(orbTexture);
     }
 
     public void update() throws IOException {
         for (WorldObject o : objects) {
+            if (o instanceof Hero) continue;
             if (o instanceof Npc npc) {
                 if (npc.updateNpc(objectsOnAdd, this)) objectsOnDestroy.add(o);
             }
@@ -47,14 +49,15 @@ public class WorldBase {
                             objectsOnAdd.add(new Bullet(
                                     o.getPos(),
                                     0.3f, ColorOperation.green,
-                                    n, 0.4f, 80, 3, 1)
+                                    n, 0.4f, 80, 3, 1,
+                                    true, textureCollection.getIndex(portalTexture))
                             );
                         }
                     }
                     objectsOnDestroy.add(o);
                 }
             }
-            if (r.nextInt(100) == 1) addTimeSphere();
+            if (r.nextInt(10) == 1) addTimeSphere();
         }
         while (!objectsOnAdd.empty()) {
             objects.add(objectsOnAdd.pop());
@@ -80,12 +83,12 @@ public class WorldBase {
         if (maxTimeCounter >= maxTimeSpheres) return;
         needUpdateBuffers = true;
         objectsOnAdd.add(new TimeSphere(
-                new float[]{r.nextInt(50) - 25, 1, r.nextInt(50) - 25},
+                new float[]{r.nextInt(100) - 50, 1, r.nextInt(100) - 50},
                 2f,
                 ColorOperation.GColorToInt(new Color(130, 130, 130)),
                 true,
                 textureCollection.getIndex(orbTexture),
-                r.nextInt(5) * 1000000000L)
+                25000000000L)
         );
         maxTimeCounter++;
     }

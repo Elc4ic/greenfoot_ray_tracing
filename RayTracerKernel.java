@@ -103,22 +103,59 @@ public class RayTracerKernel extends Kernel {
         float minZ = rotateZ(minXr, minYr, minZr, angleX, angleY) + posZ;
         float maxZ = rotateZ(maxXr, maxYr, maxZr, angleX, angleY) + posZ;
 
-        float t1 = (minX - ox) / dx;
-        float t2 = (maxX - ox) / dx;
-        float tmin = min(t1, t2);
-        float tmax = max(t1, t2);
+        //z = min
+        return intersectTriangleInBox(minX, minY, minZ, maxX, minY, minZ, minX, maxY, minZ, ox, oy, oz, dx, dy, dz)
+                || intersectTriangleInBox(maxX, minY, minZ, minX, maxY, minZ, maxX, maxY, minZ, ox, oy, oz, dx, dy, dz)
+                //x = min
+                || intersectTriangleInBox(minX, maxY, minZ, minX, minY, minZ, minX, maxY, maxZ, ox, oy, oz, dx, dy, dz)
+                || intersectTriangleInBox(minX, minY, minZ, minX, maxY, maxZ, minX, minY, maxZ, ox, oy, oz, dx, dy, dz)
+                // y = min
+                || intersectTriangleInBox(maxX, minY, minZ, minX, minY, maxZ, maxX, minY, maxZ, ox, oy, oz, dx, dy, dz)
+                || intersectTriangleInBox(minX, minY, minZ, maxX, minY, minZ, minX, minY, maxZ, ox, oy, oz, dx, dy, dz)
+                //z = max
+                || intersectTriangleInBox(minX, maxY, maxZ, maxX, minY, maxZ, maxX, maxY, maxZ, ox, oy, oz, dx, dy, dz)
+                || intersectTriangleInBox(minX, minY, maxZ, minX, maxY, maxZ, maxX, minY, maxZ, ox, oy, oz, dx, dy, dz)
+                // x =max
+                || intersectTriangleInBox(maxX, minY, minZ, maxX, minY, maxZ, maxX, maxY, minZ, ox, oy, oz, dx, dy, dz)
+                || intersectTriangleInBox(maxX, minY, maxZ, maxX, maxY, minZ, maxX, maxY, maxZ, ox, oy, oz, dx, dy, dz)
+                //y = max
+                || intersectTriangleInBox(minX, maxY, minZ, minX, maxY, maxZ, maxX, maxY, minZ, ox, oy, oz, dx, dy, dz)
+                || intersectTriangleInBox(minX, maxY, maxZ, maxX, maxY, minZ, maxX, maxY, maxZ, ox, oy, oz, dx, dy, dz);
+    }
 
-        t1 = (minY - oy) / dy;
-        t2 = (maxY - oy) / dy;
-        tmin = max(tmin, min(t1, t2));
-        tmax = min(tmax, max(t1, t2));
+    private boolean intersectTriangleInBox(
+            float v0x, float v0y, float v0z,
+            float v1x, float v1y, float v1z,
+            float v2x, float v2y, float v2z,
+            float ox, float oy, float oz,
+            float dx, float dy, float dz) {
 
-        t1 = (minZ - oz) / dz;
-        t2 = (maxZ - oz) / dz;
-        tmin = max(tmin, min(t1, t2));
-        tmax = min(tmax, max(t1, t2));
+        float t = -1f;
 
-        return tmax >= max(tmin, 0.0f);
+        float e1x = v1x - v0x, e1y = v1y - v0y, e1z = v1z - v0z;
+        float e2x = v2x - v0x, e2y = v2y - v0y, e2z = v2z - v0z;
+
+        float px = dy * e2z - dz * e2y;
+        float py = dz * e2x - dx * e2z;
+        float pz = dx * e2y - dy * e2x;
+
+        float det = e1x * px + e1y * py + e1z * pz;
+        if (!(det > -1e-6f && det < 1e-6f)) {
+            float invDet = 1f / det;
+            float sx = ox - v0x, sy = oy - v0y, sz = oz - v0z;
+            float u = (sx * px + sy * py + sz * pz) * invDet;
+            if (!(u < 0f || u > 1f)) {
+                float qx = sy * e1z - sz * e1y;
+                float qy = sz * e1x - sx * e1z;
+                float qz = sx * e1y - sy * e1x;
+
+                float v = (dx * qx + dy * qy + dz * qz) * invDet;
+                if (!(v < 0f || u + v > 1f)) {
+                    t = (e2x * qx + e2y * qy + e2z * qz) * invDet;
+                }
+            }
+        }
+        return t < 0.001f;
     }
 
     private float intersectTriangle(int oI, int tI, float ox, float oy, float oz, float dx, float dy, float dz) {

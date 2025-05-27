@@ -1,6 +1,8 @@
 import greenfoot.Color;
 
-public class Bullet extends Sphere {
+import java.io.IOException;
+
+public class Bullet extends ObjFile {
     private float[] normal;
     private int damage;
     private int penetration = 0;
@@ -10,8 +12,8 @@ public class Bullet extends Sphere {
     private float distance = 0;
     private boolean bfg = false;
 
-    public Bullet(float[] center, float radius, int color, float[] normal, float speed, int damage, float distanceMax, int penetrationMax) {
-        super(center, radius, color);
+    public Bullet(float[] pos, float scale, int color, float[] normal, float speed, int damage, float distanceMax, int penetrationMax, boolean hasTexture, int textureIndex) throws IOException {
+        super(pos, scale, color, "D:\\C_project\\Raytracer\\models\\orb.obj", hasTexture, textureIndex);
         this.normal = normal;
         this.speed = speed;
         this.damage = damage;
@@ -19,8 +21,8 @@ public class Bullet extends Sphere {
         this.penetrationMax = penetrationMax;
     }
 
-    public Bullet(float[] center, float radius, int color, float[] normal, float speed, int damage, float distanceMax, int penetrationMax, boolean bfg) {
-        super(center, radius, color);
+    public Bullet(float[] pos, float scale, int color, float[] normal, float speed, int damage, float distanceMax, int penetrationMax, boolean hasTexture, int textureIndex, boolean bfg) throws IOException {
+        super(pos, scale, color, "D:\\C_project\\Raytracer\\models\\orb.obj", hasTexture, textureIndex);
         this.normal = normal;
         this.speed = speed;
         this.damage = damage;
@@ -33,9 +35,9 @@ public class Bullet extends Sphere {
         if (distance >= distanceMax || penetration >= penetrationMax) {
             return true;
         }
-        float[] move = Vector3.scale(normal,speed);
+        float[] move = Vector3.scale(normal, speed);
         distance += Vector3.length(move);
-        setCenter(Vector3.add(getPos(),move));
+        addToPos(move);
         return false;
     }
 

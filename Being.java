@@ -3,8 +3,8 @@ import greenfoot.Color;
 import java.io.IOException;
 
 public class Being extends WorldBase {
-    public Being() throws IOException {
-        super();
+    public Being(Hero hero) throws IOException {
+        super(hero);
         try {
             Texture mapTexture = new Texture("D:\\C_project\\Raytracer\\images\\map.png");
             Texture badanTexture = new Texture("D:\\C_project\\Raytracer\\images\\badan.png");
