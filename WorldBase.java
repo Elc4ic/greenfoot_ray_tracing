@@ -19,8 +19,8 @@ public class WorldBase {
     private int maxTimeCounter = 0;
     public boolean needChangeWorld = false;
     public boolean needUpdateBuffers = false;
-    Texture portalTexture = new Texture("D:\\C_project\\Raytracer\\images\\portal.png");
-    Texture orbTexture = new Texture("D:\\C_project\\Raytracer\\images\\orb.png");
+    Texture portalTexture = new Texture("images\\portal.png");
+    Texture orbTexture = new Texture("images\\orb.png");
 
     public WorldBase(Hero hero) throws IOException {
         objects.add(hero);
