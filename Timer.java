@@ -3,7 +3,7 @@ import greenfoot.*;
 import java.util.concurrent.atomic.AtomicLong;
 
 public class Timer extends Actor {
-    private long time = 0;
+    private long time;
     private long newFrameTimeMillis = System.nanoTime();
     private long oldFrameTimeMillis = newFrameTimeMillis;
     GreenfootImage img;

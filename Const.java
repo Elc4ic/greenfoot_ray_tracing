@@ -10,6 +10,7 @@ public final class Const {
 
     public static final int WIDTH = 600;
     public static final int HEIGHT = 400;
+    public static final int PICXELS = Const.WIDTH * Const.HEIGHT;
     public static final int WIDTH_SCALE = 1;
     public static final int HEIGHT_SCALE = 1;
     public static final int SCALED_WIDTH = Const.WIDTH * Const.WIDTH_SCALE;

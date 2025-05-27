@@ -8,7 +8,7 @@ public class TimeSphere extends ObjFile {
 
 
     public TimeSphere(float[] pos, float scale, int color, boolean hasTexture, int textureIndex, long plusTime) throws IOException {
-        super(pos, scale, color, "D:\\C_project\\Raytracer\\models\\orb.obj", hasTexture, textureIndex);
+        super(pos, scale, color, "models\\orb.obj", hasTexture, textureIndex);
         this.plusTime = plusTime;
     }
 

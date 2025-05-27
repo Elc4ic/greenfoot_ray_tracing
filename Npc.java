@@ -15,7 +15,7 @@ public class Npc extends Creature {
     }
 
     boolean updateNpc(Stack<WorldObject> ooa, WorldBase world) {
-        update(world);
+        updateCreature(world);
 //        attackByRange(hero, ooa);
         return state == 0;
     }

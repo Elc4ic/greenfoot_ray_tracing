@@ -1,39 +1,33 @@
+import greenfoot.Greenfoot;
+import greenfoot.MouseInfo;
+
 import java.io.IOException;
-import java.util.Random;
 
 public class Hero extends Creature {
-    int renderDistObjects = 9;
-    int renderDistLight = 7;
-    float viewportHeight;
-    float viewportWidth;
+
+    Camera camera;
     Gun[] arsenal;
     int gunInUse;
     int gunInHand;
 
-    public Hero(float[] pos, float scale, float[] normal, float fov, boolean hasTexture, int textureIndex) throws IOException {
-        super(pos, scale, normal,"models\\block.obj", ColorOperation.green, 0.5f, hasTexture, textureIndex);
+    public Hero(float[] pos, float scale, float[] normal, Camera camera, boolean hasTexture, int textureIndex) throws IOException {
+        super(pos, scale, normal, "models\\block.obj", ColorOperation.green, 0.5f, hasTexture, textureIndex);
         this.arsenal = new Gun[]{
                 new Pistol(this, Const.WIDTH - 80, Const.HEIGHT - 170, Const.HEIGHT_SCALE),
                 new Shotgun(this, Const.WIDTH / 2 - 10, Const.HEIGHT - 110, Const.HEIGHT_SCALE * 2),
                 new Smg(this, Const.WIDTH / 2 - 40, Const.HEIGHT - 120, Const.HEIGHT_SCALE * 2),
                 new Bfg(this, Const.WIDTH / 2, Const.HEIGHT - 90, Const.HEIGHT_SCALE * 2)
         };
-        this.viewportHeight = 2f * (float) Math.tan(Math.toRadians(fov / 2.0));
-        this.viewportWidth = viewportHeight * Const.WIDTH / Const.HEIGHT;
+        this.camera = camera;
         gunInUse = 0;
         arsenal[gunInUse].show(true);
         gunInHand = 0;
     }
 
     void updateHero(WorldBase worldBase) {
+        control();
         updateGun();
-        update(worldBase);
-    }
-
-    float[] getOffset(float[] normal,float u, float v) {
-        float[] right = Vector3.normalize(Vector3.cross(normal, new float[]{0, 1, 0}));
-        float[] up = Vector3.normalize(Vector3.cross(right, normal));
-        return Vector3.add(Vector3.scale(right, u * viewportWidth), Vector3.scale(up, v * viewportHeight));
+        updateCreature(worldBase);
     }
 
     Gun getGun() {
@@ -55,16 +49,47 @@ public class Hero extends Creature {
         arsenal[gunInHand].act();
     }
 
-    boolean needRenderObject(float[] pos) {
-        return Vector3.length(Vector3.subtract(getPos(), pos)) < renderDistObjects;
-    }
-
-    boolean needRenderLight(float[] pos) {
-        return Vector3.length(Vector3.subtract(getPos(), pos)) < renderDistLight;
-    }
-
     void switchGun(int i) {
         gunInUse = i % arsenal.length;
+    }
+
+    void control() {
+        if (Greenfoot.mouseMoved(null)) {
+            MouseInfo mouse = Greenfoot.getMouseInfo();
+            int x = mouse.getX();
+            int y = mouse.getY();
+            int mx = Const.SCALED_WIDTH / 2 - x;
+            int my = y - Const.SCALED_HEIGHT / 2;
+            rotateXn(mx / 10f);
+//                hero.rotateYn(my / 10.0);
+        }
+        if (Greenfoot.isKeyDown("a")) {
+            moveRight();
+        }
+        if (Greenfoot.isKeyDown("d")) {
+            moveLeft();
+        }
+        if (Greenfoot.isKeyDown("w")) {
+            moveForward();
+        }
+        if (Greenfoot.isKeyDown("s")) {
+            moveBackward();
+        }
+        if (Greenfoot.isKeyDown("z")) {
+            jump();
+        }
+        if (Greenfoot.isKeyDown("1")) {
+            switchGun(0);
+        }
+        if (Greenfoot.isKeyDown("2")) {
+            switchGun(1);
+        }
+        if (Greenfoot.isKeyDown("3")) {
+            switchGun(2);
+        }
+        if (Greenfoot.isKeyDown("4")) {
+            switchGun(3);
+        }
     }
 
 }

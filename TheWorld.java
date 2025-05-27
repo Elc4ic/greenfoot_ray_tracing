@@ -5,23 +5,23 @@ import greenfoot.*;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.stream.IntStream;
 
 
 public class TheWorld extends World {
 
     private final Interface interface1;
-    private final Hero hero = new Hero(new float[]{3, 1, 3}, 0.5f, new float[]{1, 0, 1}, 45, false, 1);
-
-    private final WorldBase hell = new Hell(hero);
-    private final WorldBase being = new Being(hero);
-
-    private WorldBase worldBase = hell;
+    private final Camera camera = new Camera(90);
+    private final Hero hero = new Hero(new float[]{3, 1, 3}, 0.5f, new float[]{1, 0, 1}, camera, false, 1);
+    TextureCollection textures = TextureCollection.getInstance();
+    private WorldBase worldBase;
 
     private final FPSCounter fPSCounter = new FPSCounter();
     GreenfootImage frame = new GreenfootImage(Const.WIDTH, Const.HEIGHT);
     Kernel kernel;
-    Range range = Range.create(Const.HEIGHT * Const.WIDTH);
+
 
     private float[] positions;
     private float[] rotations;
@@ -32,24 +32,25 @@ public class TheWorld extends World {
     private float[] vertices;
     private float[] texCoords;
     private int[] texture;
+    private float[] projected;
 
+    private final float[] depth_buffer = new float[Const.PICXELS];
     private final float[] rays = new float[Const.HEIGHT * Const.WIDTH * Ray.RAY_SIZE];
     private final int[] output = new int[Const.HEIGHT * Const.WIDTH];
 
     public TheWorld() throws IOException {
         super(Const.SCALED_WIDTH, Const.SCALED_HEIGHT, 1);
 
+        Texture mapTexture = new Texture("images\\map.png", "map");
+        Texture badanTexture = new Texture("images\\badan.png", "badan");
+        textures.addTexture(mapTexture);
+        textures.addTexture(badanTexture);
+
+        worldBase = new Being(hero);
         interface1 = new Interface(hero, fPSCounter);
         addObject(interface1, interface1.getImg().getWidth() / 2, Const.SCALED_HEIGHT - interface1.getImg().getHeight() / 2);
         addObject(hero.getTimer(), Const.SCALED_WIDTH / 2, 20);
-        for (Gun g : hero.arsenal) {
-            addObject(g, g.x, g.y);
-        }
-
         loadScreen();
-        hell.addPortal(being);
-        being.addPortal(hell);
-
         initWorld();
     }
 
@@ -68,77 +69,33 @@ public class TheWorld extends World {
         } else if (hero.state == -1) {
             win();
         } else {
-            if (Greenfoot.mouseMoved(null)) {
-                MouseInfo mouse = Greenfoot.getMouseInfo();
-                int x = mouse.getX();
-                int y = mouse.getY();
-                int mx = Const.SCALED_WIDTH / 2 - x;
-                int my = y - Const.SCALED_HEIGHT / 2;
-                hero.rotateXn(mx / 10f);
 
-//                hero.rotateYn(my / 10.0);
+            if (Greenfoot.isKeyDown("j")) {
+                camera.setRotations(0, 0.1f, 0);
             }
-
-            if (Greenfoot.isKeyDown("a")) {
-                hero.moveRight();
+            if (Greenfoot.isKeyDown("l")) {
+                camera.setRotations(0, -0.1f, 0);
             }
-
-            if (Greenfoot.isKeyDown("7")) {
-                loadScreen();
-                worldBase = hell;
-                initWorld();
+            if (Greenfoot.isKeyDown("i")) {
+                camera.setRotations(0.1f, 0, 0);
             }
-//            if (Greenfoot.isKeyDown("8")) {
-//                loadScreen();
-//                worldBase = being;
-//                initWorld();
-//            }
-            if (Greenfoot.isKeyDown("d")) {
-                hero.moveLeft();
-            }
-            if (Greenfoot.isKeyDown("w")) {
-                hero.moveForward();
-            }
-            if (Greenfoot.isKeyDown("s")) {
-                hero.moveBackward();
-            }
-            if (Greenfoot.isKeyDown("z")) {
-                hero.jump();
-            }
-            if (Greenfoot.isKeyDown("1")) {
-                hero.switchGun(0);
-            }
-            if (Greenfoot.isKeyDown("2")) {
-                hero.switchGun(1);
-            }
-            if (Greenfoot.isKeyDown("3")) {
-                hero.switchGun(2);
-            }
-            if (Greenfoot.isKeyDown("4")) {
-                hero.switchGun(3);
+            if (Greenfoot.isKeyDown("k")) {
+                camera.setRotations(-0.1f, 0, 0);
             }
 
             if (worldBase.needUpdateBuffers) {
                 initWorld();
             }
-            if (worldBase.isNeedChangeWorld()) {
-                loadScreen();
-                worldBase = worldBase.getNewWorld();
-                initWorld();
-            }
-
             render();
-
             try {
                 worldBase.update();
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
 
-
             hero.updateHero(worldBase);
-            hero.winCondition(worldBase.getWinShape());
             interface1.update();
+            camera.setPos(hero.getPos());
         }
         fPSCounter.update();
     }
@@ -175,6 +132,7 @@ public class TheWorld extends World {
         cache = new float[sizeNode[ObjFile.LEAFS_OFFSET] / 6 * 13];
         leafInsides = new int[sizeNode[ObjFile.LEAFS_OFFSET]];
         vertices = new float[sizeNode[ObjFile.VERTEX_OFFSET] * 3];
+        projected = new float[sizeNode[ObjFile.VERTEX_OFFSET] * 3];
         texCoords = new float[sizeNode[ObjFile.TEXT_COORD_OFFSET] * 2];
         texture = new int[worldBase.textureCollection.getAllTexturesSize()];
         //fill arrays
@@ -196,9 +154,9 @@ public class TheWorld extends World {
                 nOfObj++;
             }
         }
-        List<Texture> textures = worldBase.textureCollection.collection;
+        List<Texture> textures = worldBase.textureCollection.textures;
         for (int i = 0; i < textures.size(); i++) {
-            int[] text = worldBase.textureCollection.getTextureBuff(i);
+            int[] text = worldBase.textureCollection.getTexture(i).textureBuff;
             System.arraycopy(text, 0, texture, worldBase.textureCollection.getOffset(i), text.length);
         }
     }
@@ -206,24 +164,29 @@ public class TheWorld extends World {
     private void render() {
         initRotation(worldBase.getObjects());
         initPosition(worldBase.getObjects());
-        initRays();
+        projectVertices();
 
-        kernel = new RayTracerKernel(
-                positions, rotations, sizes, bounds, cache, vertices, texCoords, leafInsides, texture, output, rays
+        IntStream.range(0, Const.PICXELS).forEach(i -> depth_buffer[i] = Float.MAX_VALUE);
+        IntStream.range(0, Const.PICXELS).forEach(i -> output[i] = 0xffffff);
+
+        int objectsCount = sizes.length / ObjFile.SIZES_SIZE;
+//        int triangleCount = IntStream.range(0, objectsCount).map(i -> sizes[i * ObjFile.SIZES_SIZE + ObjFile.FACE_COUNT_OFFSET]).sum();
+
+        Range range = Range.create(objectsCount);
+
+        kernel = new RasterizerKernel(
+                sizes, vertices, texCoords, leafInsides, projected, texture, output, depth_buffer, Const.WIDTH, Const.HEIGHT
         );
-        kernel.setExecutionModeWithoutFallback(Kernel.EXECUTION_MODE.GPU);
+        kernel.setExecutionModeWithoutFallback(Kernel.EXECUTION_MODE.JTP);
         kernel.setExplicit(true);
 
         kernel.put(sizes);
-        kernel.put(bounds);
-        kernel.put(cache);
         kernel.put(vertices);
         kernel.put(texCoords);
         kernel.put(leafInsides);
+        kernel.put(projected);
         kernel.put(texture);
-        kernel.put(rays);
-        kernel.put(positions);
-        kernel.put(rotations);
+        kernel.put(depth_buffer);
 
         kernel.execute(range);
         kernel.get(output);
@@ -259,24 +222,57 @@ public class TheWorld extends World {
         }
     }
 
-    private void initRays() {
-        float[] cameraNormal = Vector3.normalize(Vector3.add(hero.getNormal(), new float[]{0, -0.25f, 0}));
-        float[] heroPos = Vector3.add(hero.getPos(), Vector3.scale(cameraNormal, -4));
-        for (int x = 0; x < Const.WIDTH; x++) {
-            for (int y = 0; y < Const.HEIGHT; y++) {
-                float u = (x + 0.5f) / Const.WIDTH * 2 - 1;
-                float v = 1 - (y + 0.5f) / Const.HEIGHT * 2;
-                float[] rayDir = Vector3.normalize(Vector3.add(cameraNormal, hero.getOffset(cameraNormal, u, v)));
-                int i = (y * Const.WIDTH + x) * 6;
-                rays[i] = heroPos[0];
-                rays[i + 1] = heroPos[1];
-                rays[i + 2] = heroPos[2];
-                rays[i + 3] = rayDir[0];
-                rays[i + 4] = rayDir[1];
-                rays[i + 5] = rayDir[2];
-            }
+    private void projectVertices() {
+        float sinX = (float) Math.sin(camera.getRotations()[0]);
+        float cosX = (float) Math.cos(camera.getRotations()[0]);
+
+        float sinY = (float) Math.sin(camera.getRotations()[1]);
+        float cosY = (float) Math.cos(camera.getRotations()[1]);
+
+        for (int i = 0; i < vertices.length / ObjFile.VERTEX_SIZE; i++) {
+            float vx = vertices[i * ObjFile.VERTEX_SIZE + ObjFile.VERTEX_X];
+            float vy = vertices[i * ObjFile.VERTEX_SIZE + ObjFile.VERTEX_Y];
+            float vz = vertices[i * ObjFile.VERTEX_SIZE + ObjFile.VERTEX_Z];
+
+            float dx = vx - camera.getPos()[0];
+            float dy = vy - camera.getPos()[1];
+            float dz = vz - camera.getPos()[2];
+
+            float x = dx * cosY - dz * sinY;
+            float xzZ = dx * sinY + dz * cosY;
+
+            float y = dy * cosX - xzZ * sinX;
+            float z = dy * sinX + xzZ * cosX;
+
+            if (z <= Const.EPSILON) z = Const.EPSILON;
+
+            float px = (x / z) * camera.fov * camera.aspect;
+            float py = (y / z) * camera.fov;
+
+            int screenX = (int) ((px + 1) * Const.WIDTH * 0.5f);
+            int screenY = (int) ((1 - py) * Const.HEIGHT * 0.5f);
+            screenX = Math.max(0, Math.min(Const.WIDTH - 1, screenX));
+            screenY = Math.max(0, Math.min(Const.HEIGHT - 1, screenY));
+
+            projected[i * ObjFile.VERTEX_SIZE + ObjFile.VERTEX_X] = screenX;
+            projected[i * ObjFile.VERTEX_SIZE + ObjFile.VERTEX_Y] = screenY;
+            projected[i * ObjFile.VERTEX_SIZE + ObjFile.VERTEX_Z] = z;
         }
     }
+
+
+
+    //            float rotX = rotations[i * ObjFile.ROTATION_SIZE + ObjFile.ROTATION_X];
+//            float rotY = rotations[i * ObjFile.ROTATION_SIZE + ObjFile.ROTATION_Y];
+//            float rotZ = rotations[i * ObjFile.ROTATION_SIZE + ObjFile.ROTATION_Z];
+//
+//            float posX = positions[i * ObjFile.POS_SIZE + ObjFile.POS_X];
+//            float posY = positions[i * ObjFile.POS_SIZE + ObjFile.POS_Y];
+//            float posZ = positions[i * ObjFile.POS_SIZE + ObjFile.POS_Z];
+//
+//            vx += posX;
+//            vy += posY;
+//            vz += posZ;
 
     void lose() {
         GreenfootImage img = new GreenfootImage(

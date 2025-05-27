@@ -25,15 +25,14 @@ public class Creature extends ObjFile {
     final float hitBoxRadius;
     private final DVector collisionResistance = new DVector();
     private final Timer timer = new Timer(100000000000L);
-    private int portalEnterCounter = 0;
 
-    public Creature(float[] pos, float scale, float[] normal,String objFile, int color, float hitBoxRadius, boolean hasTexture, int textureIndex) throws IOException {
+    public Creature(float[] pos, float scale, float[] normal, String objFile, int color, float hitBoxRadius, boolean hasTexture, int textureIndex) throws IOException {
         super(pos, scale, color, objFile, hasTexture, textureIndex);
         this.normal = Vector3.normalize(normal);
         this.hitBoxRadius = hitBoxRadius;
     }
 
-    public void update(WorldBase world) {
+    public void updateCreature(WorldBase world) {
         checkCollision(world, true);
         updatePosition();
         updateState();
@@ -50,8 +49,6 @@ public class Creature extends ObjFile {
 //                float[] normal = o.getNormal(getPos(), hitBoxRadius);
 //                collisionResistance.setAdsMax(normal);
 
-            } else if (o instanceof Portal) {
-                portalEnterCounter = 0;
             }
         }
 
@@ -61,12 +58,6 @@ public class Creature extends ObjFile {
         if (o instanceof TimeSphere timeSphere) {
             timer.addTime(timeSphere.takeTime());
             world.deleteObject(timeSphere);
-        } else if (o instanceof Portal portal) {
-            if (portalEnterCounter < 2) portalEnterCounter++;
-            if (portalEnterCounter == 1) {
-                world.newWorld = portal.changeWorld();
-                world.needChangeWorld = true;
-            }
         } else if (o instanceof Bullet bullet && bulletCollisionEnabled) {
             applyDamage(-bullet.getDamage());
             bullet.addPenetration();
@@ -87,7 +78,6 @@ public class Creature extends ObjFile {
     }
 
     private void applyGravity() {
-        System.out.println(speedY);
         if (getPos()[1] > 1f) {
             speedY -= GRAVITY;
         } else {
