@@ -5,7 +5,6 @@ import greenfoot.*;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.LinkedList;
 import java.util.List;
 
 
@@ -18,8 +17,6 @@ public class TheWorld extends World {
     private final WorldBase being = new Being(hero);
 
     private WorldBase worldBase = hell;
-
-//    private final WorldBase maze = new MazeWorld(hero);
 
     private final FPSCounter fPSCounter = new FPSCounter();
     GreenfootImage frame = new GreenfootImage(Const.WIDTH, Const.HEIGHT);

@@ -8,8 +8,8 @@ public class Hell extends WorldBase {
     public Hell(Hero hero) throws IOException {
         super(hero);
         try {
-            Texture portalTexture = new Texture("D:\\C_project\\Raytracer\\images\\portal.png");
-            Texture flagTexture = new Texture("D:\\C_project\\Raytracer\\images\\flag.png");
+            Texture portalTexture = new Texture("images\\portal.png");
+            Texture flagTexture = new Texture("images\\flag.png");
             textureCollection.addTexture(portalTexture);
             textureCollection.addTexture(flagTexture);
 
@@ -17,7 +17,7 @@ public class Hell extends WorldBase {
                     new float[]{5, 0, 6},
                     0.4f,
                     ColorOperation.GColorToInt(new Color(130, 130, 130)),
-                    "D:\\C_project\\Raytracer\\models\\flag.obj",
+                    "models\\flag.obj",
                     true,
                     textureCollection.getIndex(flagTexture)
             ));
@@ -26,7 +26,7 @@ public class Hell extends WorldBase {
                     new float[]{3, 0, 6},
                     10f,
                     ColorOperation.GColorToInt(new Color(130, 130, 130)),
-                    "D:\\C_project\\Raytracer\\models\\plate.obj",
+                    "models\\plate.obj",
                     true,
                     textureCollection.getIndex(portalTexture)
             ));

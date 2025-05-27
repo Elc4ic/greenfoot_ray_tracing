@@ -10,7 +10,7 @@ public class Npc extends Creature {
     Hero hero;
 
     public Npc(float[] pos, float scale, float[] normal, Hero hero, boolean hasTexture, int textureIndex) throws IOException {
-        super(pos, scale, normal, "D:\\C_project\\Raytracer\\models\\block.obj", ColorOperation.green, 0.4f, hasTexture, textureIndex);
+        super(pos, scale, normal, "models\\block.obj", ColorOperation.green, 0.4f, hasTexture, textureIndex);
         this.hero = hero;
     }
 

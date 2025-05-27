@@ -11,7 +11,7 @@ public class Hero extends Creature {
     int gunInHand;
 
     public Hero(float[] pos, float scale, float[] normal, float fov, boolean hasTexture, int textureIndex) throws IOException {
-        super(pos, scale, normal,"D:\\C_project\\Raytracer\\models\\block.obj", ColorOperation.green, 0.5f, hasTexture, textureIndex);
+        super(pos, scale, normal,"models\\block.obj", ColorOperation.green, 0.5f, hasTexture, textureIndex);
         this.arsenal = new Gun[]{
                 new Pistol(this, Const.WIDTH - 80, Const.HEIGHT - 170, Const.HEIGHT_SCALE),
                 new Shotgun(this, Const.WIDTH / 2 - 10, Const.HEIGHT - 110, Const.HEIGHT_SCALE * 2),
