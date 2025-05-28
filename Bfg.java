@@ -74,7 +74,7 @@ public class Bfg extends Gun {
         }
         if (Greenfoot.isKeyDown("space") && state != 1 && ammo > 0) {
             step = 0;
-            float[] n = Vector3.scale(hero.getNormal(), 1);
+            float[] n = Vector3.scale(hero.getDirection(), 1);
 //            objects.add(new Bullet(
 //                    Vector3.add(hero.getPos(), hero.getNormal()),
 //                    0.5f, ColorOperation.green,

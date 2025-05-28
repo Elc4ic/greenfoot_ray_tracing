@@ -99,7 +99,7 @@ public class Shotgun extends Gun {
         if (Greenfoot.isKeyDown("space") && state != 1 && ammo > 0) {
             step = 0;
             for (int i = 0; i < 20; i++) {
-                float[] n = Vector3.scale(hero.getNormal(), 1);
+                float[] n = Vector3.scale(hero.getDirection(), 1);
                 Vector3.rotateX(n, (r.nextFloat() - 0.5f) * 14);
                 Vector3.rotateY(n, (r.nextFloat() - 0.5f) * 14);
                 Vector3.rotateZ(n, (r.nextFloat() - 0.5f) * 14);

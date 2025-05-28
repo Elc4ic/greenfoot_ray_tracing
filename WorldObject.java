@@ -1,31 +1,48 @@
 public abstract class WorldObject {
-    private int color;
-
-    Intersection noIntersection() {
-        return new Intersection(
-                null,
-                -1,
-                null,
-                0);
-    }
-
-    public WorldObject(int color) {
-        this.color = color;
-    }
-
-    public abstract float[] getPos();
-
-    public abstract Intersection getIntersection(Ray ray);
+    private float[] rotation = {0, 0, 0};
+    private float[] pos = {0, 0, 0};
+    private float[] direction = {1, 0, 0};
 
     public abstract boolean getCollision(float[] pos, float radius);
 
     public abstract float[] getNormal(float[] point, float r);
 
-    public int getColor() {
-        return color;
+    public float[] getRotation() {
+        return rotation;
     }
 
-    public void setColor(int color) {
-        this.color = color;
+    public float[] getPos() {
+        return pos;
+    }
+
+    public void setRotation(float[] rot) {
+        rotation = rot;
+    }
+
+    public float[] getDirection() {
+        System.out.println(direction[0] + " " + direction[1] + " " + direction[2]);
+        return direction;
+    }
+
+    public void setPos(float[] pos) {
+        rotation = pos;
+    }
+
+    public void addToRotation(float[] rotor) {
+        float radX = (float) Math.toRadians(rotor[0]);
+        float radY = (float) Math.toRadians(rotor[1]);
+        float radZ = (float) Math.toRadians(rotor[2]);
+        float twoPI = (float) (2 * Math.PI);
+
+        rotation[0] = (rotation[0] + radX) % twoPI;
+        rotation[1] = (rotation[1] + radY) % twoPI;
+        rotation[2] = (rotation[2] + radZ) % twoPI;
+        Vector3.rotateZr(direction, rotation[2]);
+        Vector3.rotateYr(direction, rotation[1]);
+        Vector3.rotateXr(direction, rotation[0]);
+    }
+
+    public void addToPos(float[] pos) {
+        this.pos = Vector3.add(this.pos, pos);
     }
 }

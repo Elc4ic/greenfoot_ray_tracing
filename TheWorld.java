@@ -14,28 +14,26 @@ public class TheWorld extends World {
 
     private final Interface interface1;
     private final Camera camera = new Camera(90);
-    private final Hero hero = new Hero(new float[]{3, 1, 3}, 0.5f, new float[]{1, 0, 1}, camera, false, 1);
     TextureCollection textures = TextureCollection.getInstance();
+    private final Hero hero = new Hero(new float[]{0, 0, 0}, 0.5f, new float[]{0, 0, 0}, camera, 2);
     private WorldBase worldBase;
 
     private final FPSCounter fPSCounter = new FPSCounter();
     GreenfootImage frame = new GreenfootImage(Const.WIDTH, Const.HEIGHT);
     Kernel kernel;
 
-
+    private List<Triangle> trianglesList = new ArrayList<>();
+    private List<Integer> objIndexesList = new ArrayList<>();
+    List<Triangle> clippedTriangles = new ArrayList<>();
+    List<Integer> clippedIndexes = new ArrayList<>();
+    private float[] triangles;
+    private int[] objIndexes;
     private float[] positions;
     private float[] rotations;
-    private int[] sizes;
-    private float[] bounds;
-    private float[] cache;
-    private int[] leafInsides;
-    private float[] vertices;
-    private float[] texCoords;
     private int[] texture;
-    private float[] projected;
+    private int[] textureSizes;
 
     private final float[] depth_buffer = new float[Const.PICXELS];
-    private final float[] rays = new float[Const.HEIGHT * Const.WIDTH * Ray.RAY_SIZE];
     private final int[] output = new int[Const.HEIGHT * Const.WIDTH];
 
     public TheWorld() throws IOException {
@@ -55,7 +53,7 @@ public class TheWorld extends World {
     }
 
     void initWorld() {
-        initStaticDataFromObjects(worldBase.getObjects());
+        initTrianglesFromObjects(worldBase.getObjects());
         System.gc();
     }
 
@@ -70,19 +68,6 @@ public class TheWorld extends World {
             win();
         } else {
 
-            if (Greenfoot.isKeyDown("j")) {
-                camera.setRotations(0, 0.1f, 0);
-            }
-            if (Greenfoot.isKeyDown("l")) {
-                camera.setRotations(0, -0.1f, 0);
-            }
-            if (Greenfoot.isKeyDown("i")) {
-                camera.setRotations(0.1f, 0, 0);
-            }
-            if (Greenfoot.isKeyDown("k")) {
-                camera.setRotations(-0.1f, 0, 0);
-            }
-
             if (worldBase.needUpdateBuffers) {
                 initWorld();
             }
@@ -95,96 +80,59 @@ public class TheWorld extends World {
 
             hero.updateHero(worldBase);
             interface1.update();
-            camera.setPos(hero.getPos());
         }
         fPSCounter.update();
     }
 
-    private void initStaticDataFromObjects(ArrayList<WorldObject> objects) {
-        //init sizes
-        int[] sizeNode = new int[ObjFile.SIZES_SIZE];
-        int nOfObj = (int) objects.stream().filter(obj -> obj instanceof ObjFile).count();
-        sizes = new int[nOfObj * ObjFile.SIZES_SIZE];
-        //init other arrays by size
-        nOfObj = 0;
+    private void initTrianglesFromObjects(ArrayList<WorldObject> objects) {
+        trianglesList.clear();
+        objIndexesList.clear();
+        int nOfObj = 0;
         for (WorldObject object : objects) {
             if (object instanceof ObjFile obj) {
-                sizes[nOfObj * ObjFile.SIZES_SIZE + ObjFile.VERTEX_OFFSET] = sizeNode[ObjFile.VERTEX_OFFSET];
-                sizes[nOfObj * ObjFile.SIZES_SIZE + ObjFile.TEXT_COORD_OFFSET] = sizeNode[ObjFile.TEXT_COORD_OFFSET];
-                sizes[nOfObj * ObjFile.SIZES_SIZE + ObjFile.LEAFS_OFFSET] = sizeNode[ObjFile.LEAFS_OFFSET];
-                sizes[nOfObj * ObjFile.SIZES_SIZE + ObjFile.FACE_COUNT_OFFSET] = obj.objectBuffer.sizes[ObjFile.FACE_COUNT_OFFSET];
-                sizes[nOfObj * ObjFile.SIZES_SIZE + ObjFile.TEXTURE_OFFSET] = sizeNode[ObjFile.TEXTURE_OFFSET];
-                sizeNode[ObjFile.VERTEX_OFFSET] += obj.objectBuffer.verticesBuff.length;
-                sizeNode[ObjFile.TEXT_COORD_OFFSET] += obj.objectBuffer.texCoordsBuff.length;
-                sizeNode[ObjFile.LEAFS_OFFSET] += obj.objectBuffer.leafInsidesBuff.length;
-
-                Texture texture = worldBase.textureCollection.getTexture(obj.textureIndex);
-                int offset = worldBase.textureCollection.getOffset(obj.textureIndex);
-                sizes[nOfObj * ObjFile.SIZES_SIZE + ObjFile.TEXTURE_WIDTH] = texture.textureWidth;
-                sizes[nOfObj * ObjFile.SIZES_SIZE + ObjFile.TEXTURE_HEIGHT] = texture.textureHeight;
-                sizes[nOfObj * ObjFile.SIZES_SIZE + ObjFile.TEXTURE_OFFSET] = offset;
+                List<Triangle> t = obj.getTriangles();
+                trianglesList.addAll(t);
+                for (int i = 0; i < t.size(); i++) {
+                    objIndexesList.add(nOfObj);
+                }
                 nOfObj++;
             }
         }
         rotations = new float[nOfObj * ObjFile.ROTATION_SIZE];
         positions = new float[nOfObj * ObjFile.POS_SIZE];
-        bounds = new float[nOfObj * ObjFile.BOUND_SIZE];
-        cache = new float[sizeNode[ObjFile.LEAFS_OFFSET] / 6 * 13];
-        leafInsides = new int[sizeNode[ObjFile.LEAFS_OFFSET]];
-        vertices = new float[sizeNode[ObjFile.VERTEX_OFFSET] * 3];
-        projected = new float[sizeNode[ObjFile.VERTEX_OFFSET] * 3];
-        texCoords = new float[sizeNode[ObjFile.TEXT_COORD_OFFSET] * 2];
-        texture = new int[worldBase.textureCollection.getAllTexturesSize()];
-        //fill arrays
-        nOfObj = 0;
-        for (WorldObject object : objects) {
-            if (object instanceof ObjFile obj) {
-                float[] bvhb = obj.objectBuffer.boundsBuff;
-                float[] cacheBuff = obj.objectBuffer.cacheBuff;
-                int[] leaf = obj.objectBuffer.leafInsidesBuff;
-                float[] vertex = obj.objectBuffer.verticesBuff;
-                float[] t_coord = obj.objectBuffer.texCoordsBuff;
+        texture = textures.getTextureBuff();
 
-                System.arraycopy(vertex, 0, vertices, sizes[nOfObj * ObjFile.SIZES_SIZE + ObjFile.VERTEX_OFFSET] * 3, vertex.length);
-                System.arraycopy(t_coord, 0, texCoords, sizes[nOfObj * ObjFile.SIZES_SIZE + ObjFile.TEXT_COORD_OFFSET] * 2, t_coord.length);
-                System.arraycopy(cacheBuff, 0, cache, sizes[nOfObj * ObjFile.SIZES_SIZE + ObjFile.LEAFS_OFFSET] / 6 * 13, cacheBuff.length);
-                System.arraycopy(leaf, 0, leafInsides, sizes[nOfObj * ObjFile.SIZES_SIZE + ObjFile.LEAFS_OFFSET], leaf.length);
-                System.arraycopy(bvhb, 0, bounds, nOfObj * ObjFile.BOUND_SIZE, bvhb.length);
-
-                nOfObj++;
-            }
-        }
-        List<Texture> textures = worldBase.textureCollection.textures;
-        for (int i = 0; i < textures.size(); i++) {
-            int[] text = worldBase.textureCollection.getTexture(i).textureBuff;
-            System.arraycopy(text, 0, texture, worldBase.textureCollection.getOffset(i), text.length);
-        }
+        triangles = new float[trianglesList.size() * Triangle.SIZE];
     }
 
     private void render() {
         initRotation(worldBase.getObjects());
         initPosition(worldBase.getObjects());
-        projectVertices();
+        clipping();
+        camera.bindToHero(hero);
 
         IntStream.range(0, Const.PICXELS).forEach(i -> depth_buffer[i] = Float.MAX_VALUE);
         IntStream.range(0, Const.PICXELS).forEach(i -> output[i] = 0xffffff);
 
-        int objectsCount = sizes.length / ObjFile.SIZES_SIZE;
-//        int triangleCount = IntStream.range(0, objectsCount).map(i -> sizes[i * ObjFile.SIZES_SIZE + ObjFile.FACE_COUNT_OFFSET]).sum();
-
-        Range range = Range.create(objectsCount);
+        Range range = Range.create(triangles.length / Triangle.SIZE);
 
         kernel = new RasterizerKernel(
-                sizes, vertices, texCoords, leafInsides, projected, texture, output, depth_buffer, Const.WIDTH, Const.HEIGHT
+                triangles, objIndexes, positions, rotations,
+                camera.getPos(), camera.getRotations(),
+                textureSizes, texture,
+                output, depth_buffer,
+                camera.fov, Const.WIDTH, Const.HEIGHT
         );
         kernel.setExecutionModeWithoutFallback(Kernel.EXECUTION_MODE.JTP);
         kernel.setExplicit(true);
 
-        kernel.put(sizes);
-        kernel.put(vertices);
-        kernel.put(texCoords);
-        kernel.put(leafInsides);
-        kernel.put(projected);
+        kernel.put(triangles);
+        kernel.put(objIndexes);
+        kernel.put(positions);
+        kernel.put(rotations);
+        kernel.put(camera.getPos());
+        kernel.put(camera.getRotations());
+        kernel.put(textureSizes);
         kernel.put(texture);
         kernel.put(depth_buffer);
 
@@ -222,44 +170,77 @@ public class TheWorld extends World {
         }
     }
 
-    private void projectVertices() {
-        float sinX = (float) Math.sin(camera.getRotations()[0]);
-        float cosX = (float) Math.cos(camera.getRotations()[0]);
+    private void clipping() {
+        clippedTriangles.clear();
+        clippedIndexes.clear();
 
-        float sinY = (float) Math.sin(camera.getRotations()[1]);
-        float cosY = (float) Math.cos(camera.getRotations()[1]);
-
-        for (int i = 0; i < vertices.length / ObjFile.VERTEX_SIZE; i++) {
-            float vx = vertices[i * ObjFile.VERTEX_SIZE + ObjFile.VERTEX_X];
-            float vy = vertices[i * ObjFile.VERTEX_SIZE + ObjFile.VERTEX_Y];
-            float vz = vertices[i * ObjFile.VERTEX_SIZE + ObjFile.VERTEX_Z];
-
-            float dx = vx - camera.getPos()[0];
-            float dy = vy - camera.getPos()[1];
-            float dz = vz - camera.getPos()[2];
-
-            float x = dx * cosY - dz * sinY;
-            float xzZ = dx * sinY + dz * cosY;
-
-            float y = dy * cosX - xzZ * sinX;
-            float z = dy * sinX + xzZ * cosX;
-
-            if (z <= Const.EPSILON) z = Const.EPSILON;
-
-            float px = (x / z) * camera.fov * camera.aspect;
-            float py = (y / z) * camera.fov;
-
-            int screenX = (int) ((px + 1) * Const.WIDTH * 0.5f);
-            int screenY = (int) ((1 - py) * Const.HEIGHT * 0.5f);
-            screenX = Math.max(0, Math.min(Const.WIDTH - 1, screenX));
-            screenY = Math.max(0, Math.min(Const.HEIGHT - 1, screenY));
-
-            projected[i * ObjFile.VERTEX_SIZE + ObjFile.VERTEX_X] = screenX;
-            projected[i * ObjFile.VERTEX_SIZE + ObjFile.VERTEX_Y] = screenY;
-            projected[i * ObjFile.VERTEX_SIZE + ObjFile.VERTEX_Z] = z;
+        for (int j = 0; j < trianglesList.size(); j++) {
+            List<Triangle> clipped = clipTriangle(trianglesList.get(j));
+            if (clipped.isEmpty()) continue;
+            clippedTriangles.addAll(clipped);
+            for (int i = 0; i < clipped.size(); i++) {
+                clippedIndexes.add(objIndexesList.get(j));
+            }
+        }
+        textureSizes = textures.getTextureSizes(clippedTriangles);
+        triangles = new float[clippedTriangles.size() * Triangle.SIZE];
+        objIndexes = new int[clippedIndexes.size()];
+        for (int i = 0; i < clippedTriangles.size(); i++) {
+            System.arraycopy(clippedTriangles.get(i).toFloatArray(), 0, triangles, i * Triangle.SIZE, Triangle.SIZE);
+            objIndexes[i] = clippedIndexes.get(i);
         }
     }
 
+    private static final float NEAR_PLANE = 0.1f;
+
+    private static float[] interpolate(float[] a, float[] b, float nearZ) {
+        float t = (nearZ - a[2]) / (b[2] - a[2]);
+        return new float[]{
+                a[0] + (b[0] - a[0]) * t,
+                a[1] + (b[1] - a[1]) * t,
+                nearZ,
+                a[3] + (b[3] - a[3]) * t,
+                a[4] + (b[4] - a[4]) * t
+        };
+    }
+
+    private static List<Triangle> clipTriangle(Triangle triangle) {
+        List<float[]> inside = new ArrayList<>();
+        List<float[]> outside = new ArrayList<>();
+
+        int textureIndex = triangle.textureIndex;
+        float[] v1 = triangle.v1;
+        float[] v2 = triangle.v2;
+        float[] v3 = triangle.v3;
+
+        if (triangle.v1[2] >= NEAR_PLANE) inside.add(v1);
+        else outside.add(v1);
+        if (triangle.v2[2] >= NEAR_PLANE) inside.add(v2);
+        else outside.add(v2);
+        if (triangle.v3[2] >= NEAR_PLANE) inside.add(v3);
+        else outside.add(v3);
+
+        if (inside.isEmpty()) {
+            return Collections.emptyList();
+        } else if (inside.size() == 3) {
+            return List.of(triangle);
+        } else if (inside.size() == 1) {
+            float[] a = inside.get(0);
+            float[] b = interpolate(a, outside.get(0), NEAR_PLANE);
+            float[] c = interpolate(a, outside.get(1), NEAR_PLANE);
+            return List.of(new Triangle(a, b, c, textureIndex));
+        } else {
+            float[] a = inside.get(0);
+            float[] b = inside.get(1);
+            float[] c = interpolate(a, outside.get(0), NEAR_PLANE);
+            float[] d = interpolate(b, outside.get(0), NEAR_PLANE);
+
+            return List.of(
+                    new Triangle(a, b, c, textureIndex),
+                    new Triangle(b, d, c, textureIndex)
+            );
+        }
+    }
 
 
     //            float rotX = rotations[i * ObjFile.ROTATION_SIZE + ObjFile.ROTATION_X];

@@ -4,7 +4,7 @@ import java.io.IOException;
 import java.util.Arrays;
 
 public class Creature extends ObjFile {
-    private static final float GRAVITY = 0.4f;
+    private static final float GRAVITY = 0.02f;
     private static final int STATE_DEAD = 0;
     private static final int STATE_ALIVE = 1;
     private static final int STATE_DAMAGE = 2;
@@ -14,22 +14,19 @@ public class Creature extends ObjFile {
     private final int healthMax = 100;
     int state = STATE_ALIVE;
     private int step = 1;
-
-    private float[] normal;
     float speedXZ = 0;
     private float speedY = 0;
     private boolean onGround = true;
     private final float speedMaxXZ = 1f;
     private final float speedMaxY = 1.6f;
-    private final float rotationSpeed = 1;
     final float hitBoxRadius;
     private final DVector collisionResistance = new DVector();
     private final Timer timer = new Timer(100000000000L);
 
-    public Creature(float[] pos, float scale, float[] normal, String objFile, int color, float hitBoxRadius, boolean hasTexture, int textureIndex) throws IOException {
-        super(pos, scale, color, objFile, hasTexture, textureIndex);
-        this.normal = Vector3.normalize(normal);
+    public Creature(float[] pos, float scale, float[] rotation, String objFile, float hitBoxRadius, int textureIndex) throws IOException {
+        super(pos, scale, objFile, textureIndex);
         this.hitBoxRadius = hitBoxRadius;
+        setRotation(rotation);
     }
 
     public void updateCreature(WorldBase world) {
@@ -67,7 +64,7 @@ public class Creature extends ObjFile {
     private void updatePosition() {
         if (speedXZ == 0 && speedY == 0 || state == STATE_DEAD) return;
 
-        float[] horizontalOffset = Vector3.resist(Vector3.scale(normal, speedXZ), collisionResistance);
+        float[] horizontalOffset = Vector3.resist(Vector3.scale(getDirection(), speedXZ), collisionResistance);
         float[] verticalOffset = Vector3.scale(new float[]{0, 1, 0}, speedY);
 
         addToPos(horizontalOffset);
@@ -102,15 +99,9 @@ public class Creature extends ObjFile {
         if ((state == STATE_DAMAGE || state == STATE_HEAL) && step < 5) {
             step++;
         } else {
-            updateColorByHealth();
             state = STATE_ALIVE;
             step = 0;
         }
-    }
-
-    private void updateColorByHealth() {
-        float intensity = 255f * health / healthMax;
-        setColor((int) intensity << 8);
     }
 
     public void jump() {
@@ -119,16 +110,8 @@ public class Creature extends ObjFile {
         onGround = false;
     }
 
-    void rotateYn(float angle) {
-        Vector3.rotateY(normal, angle * rotationSpeed);
-        normal = Vector3.normalize(normal);
-    }
-
     void rotateXn(float angle) {
         addToRotation(new float[]{0, -angle, 0});
-        Vector3.rotateX(normal, angle * rotationSpeed);
-        normal = Vector3.normalize(normal);
-
     }
 
     void moveForward() {
@@ -147,14 +130,6 @@ public class Creature extends ObjFile {
     }
 
 
-    float[] getNormal() {
-        return normal;
-    }
-
-    void setNormal(float[] normal) {
-        this.normal = normal;
-    }
-
     int getHealth() {
         return health;
     }
@@ -166,13 +141,10 @@ public class Creature extends ObjFile {
     public void applyDamage(int deltaHealth) {
         health += deltaHealth;
         if (health <= 0) {
-            setColor(ColorOperation.GColorToInt(Color.GRAY));
             state = STATE_DEAD;
             return;
         }
-
         state = (deltaHealth < 0) ? STATE_DAMAGE : STATE_HEAL;
-        setColor(ColorOperation.GColorToInt(deltaHealth < 0 ? Color.RED : Color.BLUE));
     }
 
     int getHealthMax() {

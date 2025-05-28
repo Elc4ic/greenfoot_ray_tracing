@@ -13,10 +13,8 @@ public class WorldBase {
     private final Stack<WorldObject> objectsOnAdd = new Stack<>();
     private final Random r = new Random();
     TextureCollection textureCollection = TextureCollection.getInstance();
-    public WorldBase newWorld;
     private int maxTimeSpheres = 150;
     private int maxTimeCounter = 0;
-    public boolean needChangeWorld = false;
     public boolean needUpdateBuffers = false;
 
     public WorldBase(Hero hero) throws IOException {

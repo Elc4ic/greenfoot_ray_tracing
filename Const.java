@@ -1,9 +1,8 @@
 
 public final class Const {
-    private Const() {}
+    private Const() {
+    }
 
-    public static final float AMBIENT = 0.1f;
-    public static final float TICKRATE = 4;
     public static final float EPSILON = 0.0001F;
     public static final float MAXIMUM_DISTANCE = Float.MAX_VALUE;
     public static final float PI = (float) (Math.PI);

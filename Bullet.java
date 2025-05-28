@@ -13,7 +13,7 @@ public class Bullet extends ObjFile {
     private boolean bfg = false;
 
     public Bullet(float[] pos, float scale, int color, float[] normal, float speed, int damage, float distanceMax, int penetrationMax, boolean hasTexture, int textureIndex) throws IOException {
-        super(pos, scale, color, "models\\orb.obj", hasTexture, textureIndex);
+        super(pos, scale, "models\\orb.obj", textureIndex);
         this.normal = normal;
         this.speed = speed;
         this.damage = damage;
@@ -22,7 +22,7 @@ public class Bullet extends ObjFile {
     }
 
     public Bullet(float[] pos, float scale, int color, float[] normal, float speed, int damage, float distanceMax, int penetrationMax, boolean hasTexture, int textureIndex, boolean bfg) throws IOException {
-        super(pos, scale, color, "models\\orb.obj", hasTexture, textureIndex);
+        super(pos, scale, "models\\orb.obj", textureIndex);
         this.normal = normal;
         this.speed = speed;
         this.damage = damage;

@@ -32,6 +32,11 @@ public class TextureCollection {
     List<Texture> textures;
     private Map<String, Integer> nameToIndexMap;
 
+    public static final int INFO_SIZE = 3;
+    public static final int TXT_OFFSET = 0;
+    public static final int TXT_W = 1;
+    public static final int TXT_H = 2;
+
     private TextureCollection() {
         textures = new ArrayList<>();
         nameToIndexMap = new HashMap<>();
@@ -75,5 +80,25 @@ public class TextureCollection {
 
     int getAllTexturesSize() {
         return getOffset(textures.size());
+    }
+
+    int[] getTextureSizes(List<Triangle> triangles) {
+        int[] textureSizes = new int[triangles.size() * INFO_SIZE];
+        for (int i = 0; i < triangles.size(); i++) {
+            Texture texture = getTexture(triangles.get(i).textureIndex);
+            textureSizes[i * INFO_SIZE + TXT_OFFSET] = getOffset(triangles.get(i).textureIndex);
+            textureSizes[i * INFO_SIZE + TXT_W] = texture.textureWidth;
+            textureSizes[i * INFO_SIZE + TXT_H] = texture.textureHeight;
+        }
+        return textureSizes;
+    }
+
+    int[] getTextureBuff() {
+        int[] textureBuff = new int[getAllTexturesSize()];
+        for (int i = 0; i < textures.size(); i++) {
+            int[] text = getTexture(i).textureBuff;
+            System.arraycopy(text, 0, textureBuff, getOffset(i), text.length);
+        }
+        return textureBuff;
     }
 }

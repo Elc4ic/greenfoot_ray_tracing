@@ -16,19 +16,16 @@ public class Vector3 {
         return (float) Math.sqrt(v[0] * v[0] + v[1] * v[1] + v[2] * v[2]);
     }
 
-    static void rotateY(float[] v, float angle) {
-        float cos = (float) Math.cos(Math.toRadians(angle));
-        float sin = (float) Math.sin(Math.toRadians(angle));
-        v[1] = v[1] * cos - v[2] * sin;
-        v[2] = v[1] * sin + v[2] * cos;
+    static void rotateX(float[] v, float angle) {
+        rotateXr(v, (float) Math.toRadians(angle));
     }
 
-    static void rotateX(float[] v, float angle) {
-        double radians = Math.toRadians(angle);
-        float cos = (float) Math.cos(radians);
-        float sin = (float) Math.sin(radians);
-        v[0] = v[0] * cos + v[2] * sin;
-        v[2] = -v[0] * sin + v[2] * cos;
+    static void rotateY(float[] v, float angle) {
+        rotateXr(v, (float) Math.toRadians(angle));
+    }
+
+    static void rotateZ(float[] v, float angle) {
+        rotateZr(v, (float) Math.toRadians(angle));
     }
 
     static void rotateXr(float[] v, float rad) {
@@ -38,11 +35,26 @@ public class Vector3 {
         v[2] = -v[0] * sin + v[2] * cos;
     }
 
-    static void rotateZ(float[] v, float angle) {
-        float cos = (float) Math.cos(Math.toRadians(angle));
-        float sin = (float) Math.sin(Math.toRadians(angle));
+    static void rotateYr(float[] v, float rad) {
+        float cos = (float) Math.cos(rad);
+        float sin = (float) Math.sin(rad);
+        v[1] = v[1] * cos - v[2] * sin;
+        v[2] = v[1] * sin + v[2] * cos;
+    }
+
+    static void rotateZr(float[] v, float rad) {
+        float cos = (float) Math.cos(rad);
+        float sin = (float) Math.sin(rad);
         v[0] = v[0] * cos + v[1] * sin;
-        v[1] = v[0] * sin + v[1] * cos; //возможно тут -x или -y
+        v[1] = v[0] * sin + v[1] * cos;
+    }
+
+
+    static float[] rotate(float[] v, float[] rotation) {
+        Vector3.rotateX(v, rotation[0]);
+        Vector3.rotateY(v, rotation[1]);
+        Vector3.rotateZ(v, rotation[2]);
+        return v;
     }
 
     public static float[] normalize(float[] v) {

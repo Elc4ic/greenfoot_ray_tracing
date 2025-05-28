@@ -10,8 +10,8 @@ public class Hero extends Creature {
     int gunInUse;
     int gunInHand;
 
-    public Hero(float[] pos, float scale, float[] normal, Camera camera, boolean hasTexture, int textureIndex) throws IOException {
-        super(pos, scale, normal, "models\\block.obj", ColorOperation.green, 0.5f, hasTexture, textureIndex);
+    public Hero(float[] pos, float scale, float[] rotation, Camera camera, int textureIndex) throws IOException {
+        super(pos, scale, rotation, "models\\block.obj", 0.5f, textureIndex);
         this.arsenal = new Gun[]{
                 new Pistol(this, Const.WIDTH - 80, Const.HEIGHT - 170, Const.HEIGHT_SCALE),
                 new Shotgun(this, Const.WIDTH / 2 - 10, Const.HEIGHT - 110, Const.HEIGHT_SCALE * 2),
@@ -32,12 +32,6 @@ public class Hero extends Creature {
 
     Gun getGun() {
         return arsenal[gunInUse];
-    }
-
-    void winCondition(WorldObject cube) {
-        if (cube != null && cube.getCollision(getPos(), hitBoxRadius)) {
-            state = -1;
-        }
     }
 
     void updateGun() {

@@ -1,31 +1,40 @@
 import com.aparapi.Kernel;
 
 public class RasterizerKernel extends Kernel {
-    private int[] sizes;
-    private float[] vertices;
-    private float[] texCoords;
-    private int[] leafInsides;
-    private int[] texture;
 
-    public int[] output;
+    private float[] triangles;
+    private int[] objIndexes;
+    private float[] positions;
+    private float[] rotations;
+    private float[] cameraPos;
+    private float[] cameraRotations;
+    private int[] textureSizes;
+    private int[] texture;
+    private float fov;
     private int width;
     private int height;
 
-    float[] projectedVertices;
+    public int[] output;
     float[] depth_buffer;
 
     public RasterizerKernel(
-            int[] sizes, float[] vertices, float[] texCoords, int[] leafInsides, float[] projected,
-            int[] texture, int[] output, float[] depth_buffer, int width, int height
+            float[] triangles, int[] objIndexes, float[] positions, float[] rotations,
+            float[] cameraPos, float[] cameraRotations,
+            int[] textureSizes, int[] texture,
+            int[] output, float[] depth_buffer,
+            float fov, int width, int height
     ) {
-        this.sizes = sizes;
-        this.leafInsides = leafInsides;
-        this.vertices = vertices;
-        this.texCoords = texCoords;
+        this.triangles = triangles;
+        this.objIndexes = objIndexes;
+        this.positions = positions;
+        this.rotations = rotations;
+        this.cameraPos = cameraPos;
+        this.cameraRotations = cameraRotations;
+        this.textureSizes = textureSizes;
         this.texture = texture;
-        this.projectedVertices = projected;
         this.output = output;
         this.depth_buffer = depth_buffer;
+        this.fov = fov;
         this.width = width;
         this.height = height;
     }
@@ -33,44 +42,68 @@ public class RasterizerKernel extends Kernel {
     @Override
     public void run() {
         int gid = getGlobalId();
-
-        int faceCount = sizes[gid * ObjFile.SIZES_SIZE + ObjFile.FACE_COUNT_OFFSET];
-        for (int i = 0; i < faceCount; i++) {
-            int tI = i * ObjFile.FACE_SIZE;
-            rasterizeTriangle(gid, tI);
-        }
+        rasterizeTriangle(gid);
     }
 
-    void rasterizeTriangle(int oI, int tI) {
-        int o_V = sizes[oI * ObjFile.SIZES_SIZE + ObjFile.VERTEX_OFFSET] * ObjFile.VERTEX_SIZE;
-        int o_TC = sizes[oI * ObjFile.SIZES_SIZE + ObjFile.TEXT_COORD_OFFSET] * ObjFile.TEXTURE_COORD_SIZE;
-        int o_L = sizes[oI * ObjFile.SIZES_SIZE + ObjFile.LEAFS_OFFSET];
-        int o_T = sizes[oI * ObjFile.SIZES_SIZE + ObjFile.TEXTURE_OFFSET];
+    void rasterizeTriangle(int tI) {
+        int triI = tI * Triangle.SIZE;
+        int txtInfo = tI * TextureCollection.INFO_SIZE;
+        int objI = objIndexes[tI];
 
-        int v1I = leafInsides[o_L + tI + ObjFile.VERTEX_1_INDEX] * ObjFile.VERTEX_SIZE;
-        int v2I = leafInsides[o_L + tI + ObjFile.VERTEX_2_INDEX] * ObjFile.VERTEX_SIZE;
-        int v3I = leafInsides[o_L + tI + ObjFile.VERTEX_3_INDEX] * ObjFile.VERTEX_SIZE;
+        int txt_offset = textureSizes[txtInfo + TextureCollection.TXT_OFFSET];
+        int txt_w = textureSizes[txtInfo + TextureCollection.TXT_W];
+        int txt_h = textureSizes[txtInfo + TextureCollection.TXT_H];
 
-        int tv0I = leafInsides[o_L + tI + ObjFile.TEXTURE_COORD_1_INDEX] * ObjFile.TEXTURE_COORD_SIZE;
-        int tv1I = leafInsides[o_L + tI + ObjFile.TEXTURE_COORD_2_INDEX] * ObjFile.TEXTURE_COORD_SIZE;
-        int tv2I = leafInsides[o_L + tI + ObjFile.TEXTURE_COORD_3_INDEX] * ObjFile.TEXTURE_COORD_SIZE;
+        float v0xr = triangles[triI + Triangle.V1_X];
+        float v0yr = triangles[triI + Triangle.V1_Y];
+        float v0zr = triangles[triI + Triangle.V1_Z];
+        float tv0u = triangles[triI + Triangle.V1_U];
+        float tv0v = triangles[triI + Triangle.V1_V];
 
-        float v0x = projectedVertices[o_V + v1I + ObjFile.VERTEX_X];
-        float v0y = projectedVertices[o_V + v1I + ObjFile.VERTEX_Y];
-        float v0z = projectedVertices[o_V + v1I + ObjFile.VERTEX_Z];
-        float v1x = projectedVertices[o_V + v2I + ObjFile.VERTEX_X];
-        float v1y = projectedVertices[o_V + v2I + ObjFile.VERTEX_Y];
-        float v1z = projectedVertices[o_V + v2I + ObjFile.VERTEX_Z];
-        float v2x = projectedVertices[o_V + v3I + ObjFile.VERTEX_X];
-        float v2y = projectedVertices[o_V + v3I + ObjFile.VERTEX_Y];
-        float v2z = projectedVertices[o_V + v3I + ObjFile.VERTEX_Z];
+        float v1xr = triangles[triI + Triangle.V2_X];
+        float v1yr = triangles[triI + Triangle.V2_Y];
+        float v1zr = triangles[triI + Triangle.V2_Z];
+        float tv1u = triangles[triI + Triangle.V2_U];
+        float tv1v = triangles[triI + Triangle.V2_V];
 
-        float tv0u = texCoords[o_TC + tv0I + ObjFile.TEXTURE_COORD_U];
-        float tv0v = texCoords[o_TC + tv0I + ObjFile.TEXTURE_COORD_V];
-        float tv1u = texCoords[o_TC + tv1I + ObjFile.TEXTURE_COORD_U];
-        float tv1v = texCoords[o_TC + tv1I + ObjFile.TEXTURE_COORD_V];
-        float tv2u = texCoords[o_TC + tv2I + ObjFile.TEXTURE_COORD_U];
-        float tv2v = texCoords[o_TC + tv2I + ObjFile.TEXTURE_COORD_V];
+        float v2xr = triangles[triI + Triangle.V3_X];
+        float v2yr = triangles[triI + Triangle.V3_Y];
+        float v2zr = triangles[triI + Triangle.V3_Z];
+        float tv2u = triangles[triI + Triangle.V3_U];
+        float tv2v = triangles[triI + Triangle.V3_V];
+
+        float posX = positions[objI * ObjFile.POS_SIZE + ObjFile.POS_X];
+        float posY = positions[objI * ObjFile.POS_SIZE + ObjFile.POS_Y];
+        float posZ = positions[objI * ObjFile.POS_SIZE + ObjFile.POS_Z];
+
+        float angleX = rotations[objI * ObjFile.ROTATION_SIZE + ObjFile.ROTATION_X];
+        float angleY = rotations[objI * ObjFile.ROTATION_SIZE + ObjFile.ROTATION_Y];
+        float angleZ = rotations[objI * ObjFile.ROTATION_SIZE + ObjFile.ROTATION_Z];
+
+        float v0xM = rotateX(v0xr, v0yr, v0zr, angleY, angleZ) + posX;
+        float v1xM = rotateX(v1xr, v1yr, v1zr, angleY, angleZ) + posX;
+        float v2xM = rotateX(v2xr, v2yr, v2zr, angleY, angleZ) + posX;
+        float v0yM = rotateY(v0xr, v0yr, v0zr, angleX, angleZ) + posY;
+        float v1yM = rotateY(v1xr, v1yr, v1zr, angleX, angleZ) + posY;
+        float v2yM = rotateY(v2xr, v2yr, v2zr, angleX, angleZ) + posY;
+        float v0zM = rotateZ(v0xr, v0yr, v0zr, angleX, angleY) + posZ;
+        float v1zM = rotateZ(v1xr, v1yr, v1zr, angleX, angleY) + posZ;
+        float v2zM = rotateZ(v2xr, v2yr, v2zr, angleX, angleY) + posZ;
+
+        float sinX = sin(cameraRotations[0]);
+        float cosX = cos(cameraRotations[0]);
+        float sinY = sin(cameraRotations[1]);
+        float cosY = cos(cameraRotations[1]);
+
+        float v0x = projectX(v0xM, v0yM, v0zM, sinX, cosX, sinY, cosY);
+        float v0y = projectY(v0xM, v0yM, v0zM, sinX, cosX, sinY, cosY);
+        float v0z = projectZ(v0xM, v0yM, v0zM, sinX, cosX, sinY, cosY);
+        float v1x = projectX(v1xM, v1yM, v1zM, sinX, cosX, sinY, cosY);
+        float v1y = projectY(v1xM, v1yM, v1zM, sinX, cosX, sinY, cosY);
+        float v1z = projectZ(v1xM, v1yM, v1zM, sinX, cosX, sinY, cosY);
+        float v2x = projectX(v2xM, v2yM, v2zM, sinX, cosX, sinY, cosY);
+        float v2y = projectY(v2xM, v2yM, v2zM, sinX, cosX, sinY, cosY);
+        float v2z = projectZ(v2xM, v2yM, v2zM, sinX, cosX, sinY, cosY);
 
         int minX = max(0, (int) min(v0x, min(v1x, v2x)));
         int maxX = min(width - 1, (int) max(v0x, max(v1x, v2x)));
@@ -94,16 +127,76 @@ public class RasterizerKernel extends Kernel {
                         float u = tv0u * bu + tv1u * bv + tv2u * bw;
                         float v = tv0v * bu + tv1v * bv + tv2v * bw;
 
-                        int w = sizes[oI * ObjFile.SIZES_SIZE + ObjFile.TEXTURE_WIDTH];
-                        int h = sizes[oI * ObjFile.SIZES_SIZE + ObjFile.TEXTURE_HEIGHT];
-                        int texX = Math.min(w - 1, Math.max(0, (int) (u * w)));
-                        int texY = Math.min(h - 1, Math.max(0, (int) (v * h)));
+                        int txtX = Math.min(txt_w - 1, Math.max(0, (int) (u * txt_w)));
+                        int txtY = Math.min(txt_h - 1, Math.max(0, (int) (v * txt_h)));
 
-                        output[x + y * width] = texture[o_T + texY * w + texX];
+                        output[x + y * width] = texture[txt_offset + txtY * txt_w + txtX];
                     }
                 }
             }
         }
+    }
+
+    private float projectX(
+            float vx, float vy, float vz,
+            float sinX, float cosX, float sinY, float cosY
+    ) {
+        float dx = vx - cameraPos[0];
+        float dy = vy - cameraPos[1];
+        float dz = vz - cameraPos[2];
+
+        float x = dx * cosY - dz * sinY;
+        float xzZ = dx * sinY + dz * cosY;
+
+        float z = dy * sinX + xzZ * cosX;
+
+        if (z <= Const.EPSILON) z = Const.EPSILON;
+
+        float px = (x * fov / z) * Const.WIDTH / Const.HEIGHT;
+
+        int screenX = (int) ((px + 1) * Const.WIDTH * 0.5f);
+        screenX = max(0, min(Const.WIDTH - 1, screenX));
+
+        return screenX;
+    }
+
+    private float projectY(
+            float vx, float vy, float vz,
+            float sinX, float cosX, float sinY, float cosY
+    ) {
+        float dx = vx - cameraPos[0];
+        float dy = vy - cameraPos[1];
+        float dz = vz - cameraPos[2];
+
+        float xzZ = dx * sinY + dz * cosY;
+
+        float y = dy * cosX - xzZ * sinX;
+        float z = dy * sinX + xzZ * cosX;
+
+        if (z <= Const.EPSILON) z = Const.EPSILON;
+
+        float py = y * fov / z;
+
+        int screenY = (int) ((1 - py) * Const.HEIGHT * 0.5f);
+        screenY = max(0, min(Const.HEIGHT - 1, screenY));
+
+        return screenY;
+    }
+
+    private float projectZ(
+            float vx, float vy, float vz,
+            float sinX, float cosX, float sinY, float cosY
+    ) {
+        float dx = vx - cameraPos[0];
+        float dy = vy - cameraPos[1];
+        float dz = vz - cameraPos[2];
+
+        float xzZ = dx * sinY + dz * cosY;
+        float z = dy * sinX + xzZ * cosX;
+
+        if (z <= Const.EPSILON) z = Const.EPSILON;
+
+        return z;
     }
 
     float rotateX(float x, float y, float z, float angleY, float angleZ) {

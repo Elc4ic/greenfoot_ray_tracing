@@ -2,15 +2,12 @@
 public class Camera {
     private float[] pos = new float[]{-1, 1, 0};
     private float[] rotations = new float[]{0, (float) Math.toRadians(45), 0};
-    int renderDistObjects = 9;
-    int renderDistLight = 7;
     float viewportHeight;
     float viewportWidth;
-    float aspect = Const.WIDTH / Const.HEIGHT;
     float fov;
 
     public Camera(float fov) {
-        this.fov = fov;
+        this.fov = (float) (1.0 / Math.tan(Math.toRadians(fov * 0.5)));
         this.viewportHeight = 2f * (float) Math.tan(Math.toRadians(fov / 2.0));
         this.viewportWidth = viewportHeight * Const.WIDTH / Const.HEIGHT;
     }
@@ -27,24 +24,16 @@ public class Camera {
         this.pos = pos;
     }
 
-    public void setRotations(float x, float y, float z) {
-        rotations[0] += (float) Math.toRadians(x);
-        rotations[1] += (float) Math.toRadians(y);
-        rotations[2] += (float) Math.toRadians(z);
+    public void setRotations(float[] rotations) {
+        this.rotations = rotations;
     }
 
-    float[] getOffset(float[] normal, float u, float v) {
-        float[] right = Vector3.normalize(Vector3.cross(normal, new float[]{0, 1, 0}));
-        float[] up = Vector3.normalize(Vector3.cross(right, normal));
-        return Vector3.add(Vector3.scale(right, u * viewportWidth), Vector3.scale(up, v * viewportHeight));
-    }
-
-    boolean needRenderObject(float[] objPos) {
-        return Vector3.length(Vector3.subtract(pos, objPos)) < renderDistObjects;
-    }
-
-    boolean needRenderLight(float[] objPos) {
-        return Vector3.length(Vector3.subtract(pos, objPos)) < renderDistLight;
+    public void bindToHero(Hero hero) {
+        float[] dir = hero.getDirection();
+        float[] heroHorizontalOffset =  Vector3.add(hero.getPos(), Vector3.scale(dir, -3));
+        float[] cameraRotation = Vector3.add(hero.getRotation(), new float[]{0, -34, 0});
+        this.pos = Vector3.add(heroHorizontalOffset,new float[]{0, 2, 0});
+        this.rotations = cameraRotation;
     }
 
 }
