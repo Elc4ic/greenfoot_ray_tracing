@@ -49,11 +49,10 @@ public class Vector3 {
     }
 
 
-    static float[] rotate(float[] v, float[] rotation) {
-        Vector3.rotateX(v, rotation[0]);
-        Vector3.rotateY(v, rotation[1]);
-        Vector3.rotateZ(v, rotation[2]);
-        return v;
+    static void rotate(float[] v, float[] rotation) {
+        Vector3.rotateZr(v, rotation[2]);
+        Vector3.rotateYr(v, rotation[1]);
+        Vector3.rotateXr(v, rotation[0]);
     }
 
     public static float[] normalize(float[] v) {
