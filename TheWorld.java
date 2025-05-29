@@ -21,20 +21,15 @@ public class TheWorld extends World {
     private final FPSCounter fPSCounter = new FPSCounter();
     GreenfootImage frame = new GreenfootImage(Const.WIDTH, Const.HEIGHT);
     Kernel rasterizer;
-    Kernel transformer;
 
     private List<Triangle> trianglesList = new ArrayList<>();
-    private List<Triangle> projectedTrianglesList = new ArrayList<>();
-    private List<Integer> objIndexesList = new ArrayList<>();
-    List<Triangle> clippedTriangles = new ArrayList<>();
-    List<Integer> clippedIndexes = new ArrayList<>();
+    private List<Triangle> tfc_trianglesList = new ArrayList<>();
+
     private float[] triangles;
-    private int[] objIndexes;
     private float[] positions;
     private float[] rotations;
     private int[] texture;
     private int[] textureSizes;
-    private final Timer worldTimer = new Timer();
 
     private final float[] depth_buffer = new float[Const.PICXELS];
     private final int[] output = new int[Const.HEIGHT * Const.WIDTH];
@@ -80,7 +75,6 @@ public class TheWorld extends World {
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
-
             hero.updateHero(worldBase);
             camera.bindToHero(hero);
             interface1.update();
@@ -90,15 +84,11 @@ public class TheWorld extends World {
 
     private void initTrianglesFromObjects(ArrayList<WorldObject> objects) {
         trianglesList.clear();
-        objIndexesList.clear();
         int nOfObj = 0;
         for (WorldObject object : objects) {
             if (object instanceof ObjFile obj) {
-                List<Triangle> t = obj.getTriangles();
+                List<Triangle> t = obj.getTriangles(nOfObj);
                 trianglesList.addAll(t);
-                for (int i = 0; i < t.size(); i++) {
-                    objIndexesList.add(nOfObj);
-                }
                 nOfObj++;
             }
         }
@@ -109,19 +99,13 @@ public class TheWorld extends World {
     }
 
     private void render() {
-        initRotation(worldBase.getObjects());
-        initPosition(worldBase.getObjects());
+        tfc_trianglesList.clear();
 
-//        Range rangeT = Range.create(trianglesList.size());
-//
-//        transformer = new TransformKernel(trianglesList, objIndexesList, positions, rotations);
-//        transformer.setExecutionModeWithoutFallback(Kernel.EXECUTION_MODE.JTP);
-//        transformer.execute(rangeT);
+        trianglesList.forEach(
+                t -> tfc_trianglesList.addAll(t.transform(worldBase.getObjects()).flat(camera).clip(0.01f))
+        );
 
-        project();
-        clipping();
-
-        initTriangles(clippedTriangles, clippedIndexes);
+        initTriangles(tfc_trianglesList);
 
         IntStream.range(0, Const.PICXELS).forEach(i -> depth_buffer[i] = Float.MAX_VALUE);
         IntStream.range(0, Const.PICXELS).forEach(i -> output[i] = 0xffffff);
@@ -132,14 +116,13 @@ public class TheWorld extends World {
                 triangles,
                 textureSizes, texture,
                 output, depth_buffer,
-                camera.fov, Const.WIDTH, Const.HEIGHT
+                Const.WIDTH, Const.HEIGHT
         );
 
         rasterizer.setExecutionModeWithoutFallback(Kernel.EXECUTION_MODE.JTP);
         rasterizer.setExplicit(true);
 
         rasterizer.put(triangles);
-        rasterizer.put(objIndexes);
         rasterizer.put(positions);
         rasterizer.put(rotations);
         rasterizer.put(camera.getPos());
@@ -162,108 +145,11 @@ public class TheWorld extends World {
         setBackground(frame);
     }
 
-    private void initRotation(ArrayList<WorldObject> objects) {
-        int nOfObj = 0;
-        for (WorldObject object : objects) {
-            if (object instanceof ObjFile obj) {
-                float[] rotor = obj.getRotation();
-                System.arraycopy(rotor, 0, rotations, nOfObj * ObjFile.POS_SIZE, rotor.length);
-                nOfObj++;
-            }
-        }
-    }
-
-    private void initPosition(ArrayList<WorldObject> objects) {
-        int nOfObj = 0;
-        for (WorldObject object : objects) {
-            if (object instanceof ObjFile obj) {
-                float[] pos = obj.getPos();
-                System.arraycopy(pos, 0, positions, nOfObj * ObjFile.POS_SIZE, pos.length);
-                nOfObj++;
-            }
-        }
-    }
-
-    private void project() {
-        projectedTrianglesList.clear();
-
-        for (Triangle t : trianglesList) {
-            projectedTrianglesList.add(t.flat(camera));
-        }
-    }
-
-    private void clipping() {
-        clippedTriangles.clear();
-        clippedIndexes.clear();
-
-        for (int j = 0; j < projectedTrianglesList.size(); j++) {
-            List<Triangle> clipped = clipTriangle(projectedTrianglesList.get(j));
-            if (clipped.isEmpty()) continue;
-            clippedTriangles.addAll(clipped);
-            for (int i = 0; i < clipped.size(); i++) {
-                clippedIndexes.add(objIndexesList.get(j));
-            }
-        }
-    }
-
-    private void initTriangles(List<Triangle> trianglesList, List<Integer> objIndexesList) {
+    private void initTriangles(List<Triangle> trianglesList) {
         textureSizes = textures.getTextureSizes(trianglesList);
         triangles = new float[trianglesList.size() * Triangle.SIZE];
-        objIndexes = new int[objIndexesList.size()];
         for (int i = 0; i < trianglesList.size(); i++) {
             System.arraycopy(trianglesList.get(i).toFloatArray(), 0, triangles, i * Triangle.SIZE, Triangle.SIZE);
-            objIndexes[i] = objIndexesList.get(i);
-        }
-    }
-
-    private static final float NEAR_PLANE = 0.1f;
-
-    private static float[] interpolate(float[] a, float[] b, float nearZ) {
-        float t = (nearZ - a[2]) / (b[2] - a[2]);
-        return new float[]{
-                a[0] + (b[0] - a[0]) * t,
-                a[1] + (b[1] - a[1]) * t,
-                nearZ,
-                a[3] + (b[3] - a[3]) * t,
-                a[4] + (b[4] - a[4]) * t
-        };
-    }
-
-    private static List<Triangle> clipTriangle(Triangle triangle) {
-        List<float[]> inside = new ArrayList<>();
-        List<float[]> outside = new ArrayList<>();
-
-        int textureIndex = triangle.textureIndex;
-        float[] v1 = triangle.v1;
-        float[] v2 = triangle.v2;
-        float[] v3 = triangle.v3;
-
-        if (triangle.v1[2] >= NEAR_PLANE) inside.add(v1);
-        else outside.add(v1);
-        if (triangle.v2[2] >= NEAR_PLANE) inside.add(v2);
-        else outside.add(v2);
-        if (triangle.v3[2] >= NEAR_PLANE) inside.add(v3);
-        else outside.add(v3);
-
-        if (inside.isEmpty()) {
-            return Collections.emptyList();
-        } else if (inside.size() == 3) {
-            return List.of(triangle);
-        } else if (inside.size() == 1) {
-            float[] a = inside.get(0);
-            float[] b = interpolate(a, outside.get(0), NEAR_PLANE);
-            float[] c = interpolate(a, outside.get(1), NEAR_PLANE);
-            return List.of(new Triangle(a, b, c, textureIndex));
-        } else {
-            float[] a = inside.get(0);
-            float[] b = inside.get(1);
-            float[] c = interpolate(a, outside.get(0), NEAR_PLANE);
-            float[] d = interpolate(b, outside.get(0), NEAR_PLANE);
-
-            return List.of(
-                    new Triangle(a, b, c, textureIndex),
-                    new Triangle(b, d, c, textureIndex)
-            );
         }
     }
 
@@ -298,11 +184,6 @@ public class TheWorld extends World {
                 img.getHeight() / 2 - img2.getHeight() / 2);
         setBackground(img);
     }
-
-    public Timer getWorldTimer() {
-        return worldTimer;
-    }
-
 
 }
 

@@ -20,14 +20,14 @@ public abstract class WorldObject {
 
     public float[] getDirection() {
         float[] direction = {0, 0, 1};
-//        Vector3.rotateZr(direction, rotation[2]);
+        Vector3.rotateZr(direction, rotation[2]);
         Vector3.rotateYr(direction, rotation[1]);
-//        Vector3.rotateXr(direction, rotation[0]);
+        Vector3.rotateXr(direction, rotation[0]);
         return Vector3.normalize(direction);
     }
 
     public void setPos(float[] pos) {
-        rotation = pos;
+        this.pos = pos;
     }
 
     public void addToRotation(float[] rotor) {

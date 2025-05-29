@@ -94,7 +94,10 @@ public class ObjFile extends WorldObject {
         faces.clear();
     }
 
-    public List<Triangle> getTriangles() {
+    public List<Triangle> getTriangles(int index) {
+        for (Triangle t : triangles) {
+            t.setObjIndex(index);
+        }
         return triangles;
     }
 
