@@ -21,7 +21,7 @@ public class Creature extends ObjFile {
     private final float speedMaxY = 1.6f;
     final float hitBoxRadius;
     private final DVector collisionResistance = new DVector();
-    private final Timer timer = new Timer(100000000000L);
+    private final Timer timer = new Timer();
 
     public Creature(float[] pos, float scale, float[] rotation, String objFile, float hitBoxRadius, int textureIndex) throws IOException {
         super(pos, scale, objFile, textureIndex);

@@ -20,9 +20,11 @@ public class TheWorld extends World {
 
     private final FPSCounter fPSCounter = new FPSCounter();
     GreenfootImage frame = new GreenfootImage(Const.WIDTH, Const.HEIGHT);
-    Kernel kernel;
+    Kernel rasterizer;
+    Kernel transformer;
 
     private List<Triangle> trianglesList = new ArrayList<>();
+    private List<Triangle> projectedTrianglesList = new ArrayList<>();
     private List<Integer> objIndexesList = new ArrayList<>();
     List<Triangle> clippedTriangles = new ArrayList<>();
     List<Integer> clippedIndexes = new ArrayList<>();
@@ -102,48 +104,59 @@ public class TheWorld extends World {
         positions = new float[nOfObj * ObjFile.POS_SIZE];
         texture = textures.getTextureBuff();
 
-        triangles = new float[trianglesList.size() * Triangle.SIZE];
     }
 
     private void render() {
         initRotation(worldBase.getObjects());
         initPosition(worldBase.getObjects());
+
+//        Range rangeT = Range.create(trianglesList.size());
+//
+//        transformer = new TransformKernel(trianglesList, objIndexesList, positions, rotations);
+//        transformer.setExecutionModeWithoutFallback(Kernel.EXECUTION_MODE.JTP);
+//        transformer.execute(rangeT);
+
+        project();
         clipping();
         camera.bindToHero(hero);
+
+        initTriangles(clippedTriangles, clippedIndexes);
 
         IntStream.range(0, Const.PICXELS).forEach(i -> depth_buffer[i] = Float.MAX_VALUE);
         IntStream.range(0, Const.PICXELS).forEach(i -> output[i] = 0xffffff);
 
         Range range = Range.create(triangles.length / Triangle.SIZE);
 
-        kernel = new RasterizerKernel(
-                triangles, objIndexes, positions, rotations,
-                camera.getPos(), camera.getRotations(),
+        rasterizer = new RasterizerKernel(
+                triangles,
                 textureSizes, texture,
                 output, depth_buffer,
                 camera.fov, Const.WIDTH, Const.HEIGHT
         );
-        kernel.setExecutionModeWithoutFallback(Kernel.EXECUTION_MODE.JTP);
-        kernel.setExplicit(true);
 
-        kernel.put(triangles);
-        kernel.put(objIndexes);
-        kernel.put(positions);
-        kernel.put(rotations);
-        kernel.put(camera.getPos());
-        kernel.put(camera.getRotations());
-        kernel.put(textureSizes);
-        kernel.put(texture);
-        kernel.put(depth_buffer);
+        rasterizer.setExecutionModeWithoutFallback(Kernel.EXECUTION_MODE.JTP);
+        rasterizer.setExplicit(true);
 
-        kernel.execute(range);
-        kernel.get(output);
+        rasterizer.put(triangles);
+        rasterizer.put(objIndexes);
+        rasterizer.put(positions);
+        rasterizer.put(rotations);
+        rasterizer.put(camera.getPos());
+        rasterizer.put(camera.getRotations());
+        rasterizer.put(textureSizes);
+        rasterizer.put(texture);
+        rasterizer.put(depth_buffer);
+
+        rasterizer.execute(range);
+        rasterizer.get(output);
         for (int y = 0; y < Const.HEIGHT; y++) {
             for (int x = 0; x < Const.WIDTH; x++) {
                 frame.setColorAt(x, y, ColorOperation.IntToGColor(output[y * Const.WIDTH + x]));
             }
         }
-        kernel.dispose();
+
+        rasterizer.dispose();
+
         frame.scale(Const.SCALED_WIDTH, Const.SCALED_HEIGHT);
         setBackground(frame);
     }
@@ -170,24 +183,35 @@ public class TheWorld extends World {
         }
     }
 
+    private void project() {
+        projectedTrianglesList.clear();
+
+        for (Triangle t : trianglesList) {
+            projectedTrianglesList.add(t.flat(camera));
+        }
+    }
+
     private void clipping() {
         clippedTriangles.clear();
         clippedIndexes.clear();
 
-        for (int j = 0; j < trianglesList.size(); j++) {
-            List<Triangle> clipped = clipTriangle(trianglesList.get(j));
+        for (int j = 0; j < projectedTrianglesList.size(); j++) {
+            List<Triangle> clipped = clipTriangle(projectedTrianglesList.get(j));
             if (clipped.isEmpty()) continue;
             clippedTriangles.addAll(clipped);
             for (int i = 0; i < clipped.size(); i++) {
                 clippedIndexes.add(objIndexesList.get(j));
             }
         }
-        textureSizes = textures.getTextureSizes(clippedTriangles);
-        triangles = new float[clippedTriangles.size() * Triangle.SIZE];
-        objIndexes = new int[clippedIndexes.size()];
-        for (int i = 0; i < clippedTriangles.size(); i++) {
-            System.arraycopy(clippedTriangles.get(i).toFloatArray(), 0, triangles, i * Triangle.SIZE, Triangle.SIZE);
-            objIndexes[i] = clippedIndexes.get(i);
+    }
+
+    private void initTriangles(List<Triangle> trianglesList, List<Integer> objIndexesList) {
+        textureSizes = textures.getTextureSizes(trianglesList);
+        triangles = new float[trianglesList.size() * Triangle.SIZE];
+        objIndexes = new int[objIndexesList.size()];
+        for (int i = 0; i < trianglesList.size(); i++) {
+            System.arraycopy(trianglesList.get(i).toFloatArray(), 0, triangles, i * Triangle.SIZE, Triangle.SIZE);
+            objIndexes[i] = objIndexesList.get(i);
         }
     }
 
@@ -241,19 +265,6 @@ public class TheWorld extends World {
             );
         }
     }
-
-
-    //            float rotX = rotations[i * ObjFile.ROTATION_SIZE + ObjFile.ROTATION_X];
-//            float rotY = rotations[i * ObjFile.ROTATION_SIZE + ObjFile.ROTATION_Y];
-//            float rotZ = rotations[i * ObjFile.ROTATION_SIZE + ObjFile.ROTATION_Z];
-//
-//            float posX = positions[i * ObjFile.POS_SIZE + ObjFile.POS_X];
-//            float posY = positions[i * ObjFile.POS_SIZE + ObjFile.POS_Y];
-//            float posZ = positions[i * ObjFile.POS_SIZE + ObjFile.POS_Z];
-//
-//            vx += posX;
-//            vy += posY;
-//            vz += posZ;
 
     void lose() {
         GreenfootImage img = new GreenfootImage(

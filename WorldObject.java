@@ -1,7 +1,6 @@
 public abstract class WorldObject {
     private float[] rotation = {0, 0, 0};
     private float[] pos = {0, 0, 0};
-    private float[] direction = {1, 0, 0};
 
     public abstract boolean getCollision(float[] pos, float radius);
 
@@ -20,8 +19,11 @@ public abstract class WorldObject {
     }
 
     public float[] getDirection() {
-        System.out.println(direction[0] + " " + direction[1] + " " + direction[2]);
-        return direction;
+        float[] direction = {1, 0, 0};
+//        Vector3.rotateZr(direction, rotation[2]);
+        Vector3.rotateYr(direction, rotation[1]);
+//        Vector3.rotateXr(direction, rotation[0]);
+        return Vector3.normalize(direction);
     }
 
     public void setPos(float[] pos) {
@@ -37,9 +39,6 @@ public abstract class WorldObject {
         rotation[0] = (rotation[0] + radX) % twoPI;
         rotation[1] = (rotation[1] + radY) % twoPI;
         rotation[2] = (rotation[2] + radZ) % twoPI;
-        Vector3.rotateZr(direction, rotation[2]);
-        Vector3.rotateYr(direction, rotation[1]);
-        Vector3.rotateXr(direction, rotation[0]);
     }
 
     public void addToPos(float[] pos) {

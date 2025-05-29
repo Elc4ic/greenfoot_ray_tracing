@@ -29,7 +29,7 @@ public class WorldBase {
 //            if (o instanceof Npc npc) {
 //                if (npc.updateNpc(objectsOnAdd, this)) objectsOnDestroy.add(o);
 //            }
-//            if (o instanceof TimeSphere obj) {
+//            if (o instanceof ObjFile obj) {
 //                obj.addToRotation(new float[]{0f, 2, 0});
 //            }
             if (o instanceof Bullet) {

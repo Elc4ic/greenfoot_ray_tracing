@@ -8,13 +8,13 @@ public class Being extends WorldBase {
         super(hero);
         try {
             getObjects().add(new ObjFile(
-                    new float[]{3, 0, 6},
+                    new float[]{0, 0, 0},
                     10f,
                     "models\\plate.obj",
                     textureCollection.getIndex("map")
             ));
             getObjects().add(new ObjFile(
-                    new float[]{5, 0, 6},
+                    new float[]{5, 0, 5},
                     0.016f,
                     "models\\albedo.obj",
                     textureCollection.getIndex("badan")

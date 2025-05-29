@@ -3,14 +3,10 @@ import greenfoot.*;
 import java.util.concurrent.atomic.AtomicLong;
 
 public class Timer extends Actor {
-    private long time;
+    private long time = 0 ;
     private long newFrameTimeMillis = System.nanoTime();
     private long oldFrameTimeMillis = newFrameTimeMillis;
     GreenfootImage img;
-
-    public Timer(long initTime) {
-        time = initTime;
-    }
 
     public void act() {
         img = new GreenfootImage(
@@ -24,7 +20,7 @@ public class Timer extends Actor {
     public boolean update() {
         this.oldFrameTimeMillis = this.newFrameTimeMillis;
         this.newFrameTimeMillis = System.nanoTime();
-        long frame = oldFrameTimeMillis - newFrameTimeMillis;
+        long frame = newFrameTimeMillis - oldFrameTimeMillis;
         time = Math.max(time + frame, 0);
         return isZero();
     }

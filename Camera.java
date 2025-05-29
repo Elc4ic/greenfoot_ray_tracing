@@ -1,7 +1,7 @@
 
 public class Camera {
-    private float[] pos = new float[]{-1, 1, 0};
-    private float[] rotations = new float[]{0, (float) Math.toRadians(45), 0};
+    private float[] pos = new float[]{0, 0, 0};
+    private float[] rotations = new float[]{0, 0, 0};
     float viewportHeight;
     float viewportWidth;
     float fov;
@@ -30,10 +30,26 @@ public class Camera {
 
     public void bindToHero(Hero hero) {
         float[] dir = hero.getDirection();
-        float[] heroHorizontalOffset =  Vector3.add(hero.getPos(), Vector3.scale(dir, -3));
-        float[] cameraRotation = Vector3.add(hero.getRotation(), new float[]{0, -34, 0});
-        this.pos = Vector3.add(heroHorizontalOffset,new float[]{0, 2, 0});
+        float[] heroHorizontalOffset = Vector3.add(hero.getPos(), Vector3.scale(dir, -3));
+        float[] cameraRotation = hero.getRotation();
+        this.pos = Vector3.add(heroHorizontalOffset, new float[]{0, 1, 0});
         this.rotations = cameraRotation;
+    }
+
+    public float sinX() {
+        return (float) Math.sin(rotations[0]);
+    }
+
+    public float cosX() {
+        return (float) Math.cos(rotations[0]);
+    }
+
+    public float sinY() {
+        return (float) Math.sin(rotations[1]);
+    }
+
+    public float cosY() {
+        return (float) Math.cos(rotations[1]);
     }
 
 }

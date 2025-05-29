@@ -21,7 +21,7 @@ public class Vector3 {
     }
 
     static void rotateY(float[] v, float angle) {
-        rotateXr(v, (float) Math.toRadians(angle));
+        rotateYr(v, (float) Math.toRadians(angle));
     }
 
     static void rotateZ(float[] v, float angle) {
@@ -31,17 +31,16 @@ public class Vector3 {
     static void rotateXr(float[] v, float rad) {
         float cos = (float) Math.cos(rad);
         float sin = (float) Math.sin(rad);
-        v[0] = v[0] * cos + v[2] * sin;
-        v[2] = -v[0] * sin + v[2] * cos;
+        v[1] = v[1] * cos - v[2] * sin;
+        v[2] = v[1] * sin + v[2] * cos;
     }
 
     static void rotateYr(float[] v, float rad) {
         float cos = (float) Math.cos(rad);
         float sin = (float) Math.sin(rad);
-        v[1] = v[1] * cos - v[2] * sin;
-        v[2] = v[1] * sin + v[2] * cos;
+        v[0] = v[0] * cos + v[2] * sin;
+        v[2] = -v[0] * sin + v[2] * cos;
     }
-
     static void rotateZr(float[] v, float rad) {
         float cos = (float) Math.cos(rad);
         float sin = (float) Math.sin(rad);
