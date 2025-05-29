@@ -34,6 +34,7 @@ public class TheWorld extends World {
     private float[] rotations;
     private int[] texture;
     private int[] textureSizes;
+    private final Timer worldTimer = new Timer();
 
     private final float[] depth_buffer = new float[Const.PICXELS];
     private final int[] output = new int[Const.HEIGHT * Const.WIDTH];
@@ -81,6 +82,7 @@ public class TheWorld extends World {
             }
 
             hero.updateHero(worldBase);
+            camera.bindToHero(hero);
             interface1.update();
         }
         fPSCounter.update();
@@ -118,7 +120,6 @@ public class TheWorld extends World {
 
         project();
         clipping();
-        camera.bindToHero(hero);
 
         initTriangles(clippedTriangles, clippedIndexes);
 
@@ -297,6 +298,11 @@ public class TheWorld extends World {
                 img.getHeight() / 2 - img2.getHeight() / 2);
         setBackground(img);
     }
+
+    public Timer getWorldTimer() {
+        return worldTimer;
+    }
+
 
 }
 

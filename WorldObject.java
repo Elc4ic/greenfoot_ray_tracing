@@ -19,7 +19,7 @@ public abstract class WorldObject {
     }
 
     public float[] getDirection() {
-        float[] direction = {1, 0, 0};
+        float[] direction = {0, 0, 1};
 //        Vector3.rotateZr(direction, rotation[2]);
         Vector3.rotateYr(direction, rotation[1]);
 //        Vector3.rotateXr(direction, rotation[0]);
