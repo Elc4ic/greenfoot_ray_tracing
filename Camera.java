@@ -52,4 +52,12 @@ public class Camera {
         return (float) Math.cos(rotations[1]);
     }
 
+    public float sinZ() {
+        return (float) Math.sin(rotations[2]);
+    }
+
+    public float cosZ() {
+        return (float) Math.cos(rotations[2]);
+    }
+
 }
