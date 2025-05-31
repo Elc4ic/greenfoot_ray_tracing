@@ -2,14 +2,10 @@
 public class Camera {
     private float[] pos = new float[]{0, 0, 0};
     private float[] rotations = new float[]{0, 0, 0};
-    float viewportHeight;
-    float viewportWidth;
     float fov;
 
     public Camera(float fov) {
         this.fov = (float) (1.0 / Math.tan(Math.toRadians(fov * 0.5)));
-        this.viewportHeight = 2f * (float) Math.tan(Math.toRadians(fov / 2.0));
-        this.viewportWidth = viewportHeight * Const.WIDTH / Const.HEIGHT;
     }
 
     public float[] getRotations() {
@@ -32,8 +28,8 @@ public class Camera {
         float[] dir = hero.getDirection();
         float[] heroHorizontalOffset = Vector3.add(hero.getPos(), Vector3.scale(dir, -3));
         float[] cameraRotation = hero.getRotation();
-        this.pos = Vector3.add(heroHorizontalOffset, new float[]{0, 1, 0});
-        this.rotations = cameraRotation;
+        this.pos = Vector3.add(heroHorizontalOffset, new float[]{0, 6, 0});
+        this.rotations = Vector3.add(cameraRotation,new float[]{(float) Math.toRadians(-35),0,0});
     }
 
     public float sinX() {

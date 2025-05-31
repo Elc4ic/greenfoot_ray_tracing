@@ -29,28 +29,34 @@ public class Vector3 {
     }
 
     static void rotateXr(float[] v, float rad) {
+        float y = v[1];
+        float z = v[2];
         float cos = (float) Math.cos(rad);
         float sin = (float) Math.sin(rad);
-        v[1] = v[1] * cos - v[2] * sin;
-        v[2] = v[1] * sin + v[2] * cos;
+        v[1] = y * cos - z * sin;
+        v[2] = y * sin + z * cos;
     }
 
     static void rotateYr(float[] v, float rad) {
+        float x = v[0];
+        float z = v[2];
         float cos = (float) Math.cos(rad);
         float sin = (float) Math.sin(rad);
-        v[0] = v[0] * cos + v[2] * sin;
-        v[2] = -v[0] * sin + v[2] * cos;
-    }
-    static void rotateZr(float[] v, float rad) {
-        float cos = (float) Math.cos(rad);
-        float sin = (float) Math.sin(rad);
-        v[0] = v[0] * cos + v[1] * sin;
-        v[1] = v[0] * sin + v[1] * cos;
+        v[0] = x * cos + z * sin;
+        v[2] = -x * sin + z * cos;
     }
 
+    static void rotateZr(float[] v, float rad) {
+        float x = v[1];
+        float y = v[2];
+        float cos = (float) Math.cos(rad);
+        float sin = (float) Math.sin(rad);
+        v[0] = x * cos - y * sin;
+        v[1] = x * sin + y * cos;
+    }
 
     static void rotate(float[] v, float[] rotation) {
-        Vector3.rotateZr(v, rotation[2]);
+//        Vector3.rotateZr(v, rotation[2]);
         Vector3.rotateYr(v, rotation[1]);
         Vector3.rotateXr(v, rotation[0]);
     }
