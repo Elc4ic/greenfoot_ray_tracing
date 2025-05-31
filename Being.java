@@ -9,16 +9,22 @@ public class Being extends WorldBase {
         try {
             getObjects().add(new ObjFile(
                     new float[]{0, 0, 0},
-                    10f,
-                    "models\\plate.obj",
+                    50f,
+                    "models\\plane.obj",
                     textureCollection.getIndex("map")
             ));
             getObjects().add(new ObjFile(
-                    new float[]{5, 0, 5},
-                    0.016f,
-                    "models\\albedo.obj",
-                    textureCollection.getIndex("badan")
+                    new float[]{0, 0, 0},
+                    3f,
+                    "models\\enemy.obj",
+                    textureCollection.getIndex("orb")
             ));
+//            getObjects().add(new ObjFile(
+//                    new float[]{5, 0, 5},
+//                    0.016f,
+//                    "models\\albedo.obj",
+//                    textureCollection.getIndex("badan")
+//            ));
         } catch (IOException e) {
             throw new RuntimeException(e);
         }

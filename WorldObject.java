@@ -23,7 +23,7 @@ public abstract class WorldObject {
         Vector3.rotateZr(direction, rotation[2]);
         Vector3.rotateYr(direction, rotation[1]);
         Vector3.rotateXr(direction, rotation[0]);
-        return Vector3.normalize(direction);
+        return direction;
     }
 
     public void setPos(float[] pos) {

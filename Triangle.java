@@ -65,7 +65,7 @@ public class Triangle {
 
         if (z <= Const.EPSILON) z = Const.EPSILON;
 
-        float px = (x / z) * camera.fov * Const.WIDTH / Const.HEIGHT;
+        float px = (x / z) * camera.fov ;
         float py = (y / z) * camera.fov;
 
         int screenX = (int) ((px + 1) * Const.WIDTH * 0.5f);
@@ -77,7 +77,6 @@ public class Triangle {
     }
 
     Triangle transform(List<WorldObject> objects) {
-        System.out.println(objIndex);
         float[] pos = objects.get(objIndex).getPos();
         float[] rotor = objects.get(objIndex).getRotation();
         return new Triangle(
@@ -90,7 +89,7 @@ public class Triangle {
 
     float[] transformVertex(float[] v, float[] pos, float[] rotor) {
         float[] nv = new float[]{v[0], v[1], v[2], v[3], v[4]};
-//        Vector3.rotate(nv, rotor);
+        Vector3.rotate(nv, rotor);
         nv[0] += pos[0];
         nv[1] += pos[1];
         nv[2] += pos[2];
