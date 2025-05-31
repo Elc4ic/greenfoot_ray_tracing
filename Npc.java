@@ -41,6 +41,6 @@ public class Npc extends Creature {
 
     void randomMove() {
         rotateXn((r.nextFloat() - 0.5f) * 30);
-        speedXZ = r.nextFloat() / 4;
+        setSpeedX(r.nextFloat() / 4);
     }
 }

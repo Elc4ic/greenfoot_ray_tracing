@@ -1,5 +1,3 @@
-import greenfoot.Color;
-
 import java.io.IOException;
 import java.util.Arrays;
 
@@ -14,7 +12,8 @@ public class Creature extends ObjFile {
     private final int healthMax = 100;
     int state = STATE_ALIVE;
     private int step = 1;
-    float speedXZ = 0;
+    private float speedX = 0;
+    private float speedZ = 0;
     private float speedY = 0;
     private boolean onGround = true;
     private final float speedMaxXZ = 1f;
@@ -62,13 +61,17 @@ public class Creature extends ObjFile {
     }
 
     private void updatePosition() {
-        if (speedXZ == 0 && speedY == 0 || state == STATE_DEAD) return;
+        if (speedX == 0 && speedY == 0 && speedZ == 0|| state == STATE_DEAD) return;
 
-        float[] horizontalOffset = Vector3.resist(Vector3.scale(getDirection(), speedXZ), collisionResistance);
-        float[] verticalOffset = Vector3.scale(new float[]{0, 1, 0}, speedY);
+        float[] XOffset = Vector3.resist(Vector3.scale(getDirection(), speedX), collisionResistance);
+        float[] direction = getDirection();
+        Vector3.rotateY(direction, 90);
+        float[] ZOffset = Vector3.resist(Vector3.scale(direction, speedZ), collisionResistance);
+        float[] YOffset = Vector3.scale(new float[]{0, 1, 0}, speedY);
 
-        addToPos(horizontalOffset);
-        addToPos(verticalOffset);
+        addToPos(XOffset);
+        addToPos(ZOffset);
+        addToPos(YOffset);
 
         applyGravity();
         applyFriction();
@@ -86,10 +89,16 @@ public class Creature extends ObjFile {
     }
 
     private void applyFriction() {
-        if (Math.abs(speedXZ) > speedMaxXZ / 4) {
-            speedXZ -= Math.signum(speedXZ) * speedMaxXZ / 4;
+        if (Math.abs(speedX) > speedMaxXZ / 4) {
+            speedX -= Math.signum(speedX) * speedMaxXZ / 4;
         } else {
-            speedXZ = 0;
+            speedX = 0;
+        }
+
+        if (Math.abs(speedZ) > speedMaxXZ / 4) {
+            speedZ -= Math.signum(speedZ) * speedMaxXZ / 4;
+        } else {
+            speedZ = 0;
         }
     }
 
@@ -113,21 +122,21 @@ public class Creature extends ObjFile {
     void rotateXn(float angle) {
         addToRotation(new float[]{0, -angle, 0});
     }
+    void rotateYn(float angle) {
+        addToRotation(new float[]{-angle, 0, 0});
+    }
 
     void moveForward() {
-        speedXZ = speedMaxXZ;
+        speedX = speedMaxXZ;
     }
 
     void moveBackward() {
-        speedXZ = -speedMaxXZ;
+        speedX = -speedMaxXZ;
     }
 
-    void moveLeft() {
+    void moveLeft() { speedZ = speedMaxXZ; }
 
-    }
-
-    void moveRight() {
-    }
+    void moveRight() { speedZ = -speedMaxXZ; }
 
 
     int getHealth() {
@@ -151,6 +160,29 @@ public class Creature extends ObjFile {
         return healthMax;
     }
 
+    public float getSpeedX() {
+        return speedX;
+    }
+
+    public float getSpeedY() {
+        return speedY;
+    }
+
+    public float getSpeedZ() {
+        return speedZ;
+    }
+
+    public void setSpeedX(float speedX) {
+        this.speedX = speedX;
+    }
+
+    public void setSpeedZ(float speedZ) {
+        this.speedZ = speedZ;
+    }
+
+    public void setSpeedY(float speedY) {
+        this.speedY = speedY;
+    }
 }
 
 class DVector {

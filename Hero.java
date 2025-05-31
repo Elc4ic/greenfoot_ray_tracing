@@ -9,6 +9,9 @@ public class Hero extends Creature {
     Gun[] arsenal;
     int gunInUse;
     int gunInHand;
+    private int prevMouseX = 0;
+    private int prevMouseY = 0;
+    private boolean firstMouseMove = true;
 
     public Hero(float[] pos, float scale, float[] rotation, Camera camera, int textureIndex) throws IOException {
         super(pos, scale, rotation, "models\\block.obj", 0.5f, textureIndex);
@@ -52,10 +55,15 @@ public class Hero extends Creature {
             MouseInfo mouse = Greenfoot.getMouseInfo();
             int x = mouse.getX();
             int y = mouse.getY();
-            int mx = Const.SCALED_WIDTH / 2 - x;
-            int my = y - Const.SCALED_HEIGHT / 2;
-            rotateXn(mx / 10f);
-//                hero.rotateYn(my / 10.0);
+
+            int deltaX = x - prevMouseX;
+            int deltaY = y - prevMouseY;
+
+            rotateXn(deltaX);
+            //rotateYn(deltaY * Const.HEIGHT/Const.WIDTH);
+
+            prevMouseX = x;
+            prevMouseY = y;
         }
         if (Greenfoot.isKeyDown("a")) {
             moveRight();
