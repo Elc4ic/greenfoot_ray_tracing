@@ -1,17 +1,35 @@
 public abstract class WorldObject {
-    private float[] rotation = {0, 0, 0};
-    private float[] pos = {0, 0, 0};
+    private float[] rotation;
+    private float[] position;
+    private final float collisionR = 0.5f;
 
-    public abstract boolean getCollision(float[] pos, float radius);
+    WorldObject(float[] position,float[] rotation) {
+        this.position = position;
+        this.rotation = rotation;
+    }
 
-    public abstract float[] getNormal(float[] point, float r);
+    public boolean getCollision(float[] pos, float r) {
+        return getDistance(pos) < collisionR + r;
+    }
+
+    public float[] getNormal(float[] pos) {
+        return Vector3.normalize(Vector3.subtract(pos, position));
+    }
+
+    public float getDistance(float[] pos) {
+        return Vector3.length(Vector3.subtract(pos, position));
+    }
 
     public float[] getRotation() {
         return rotation;
     }
 
+    public float getCollisionR() {
+        return collisionR;
+    }
+
     public float[] getPos() {
-        return pos;
+        return position;
     }
 
     public void setRotation(float[] rot) {
@@ -26,8 +44,8 @@ public abstract class WorldObject {
         return direction;
     }
 
-    public void setPos(float[] pos) {
-        this.pos = pos;
+    public void setPos(float[] position) {
+        this.position = position;
     }
 
     public void addToRotation(float[] rotor) {
@@ -42,6 +60,6 @@ public abstract class WorldObject {
     }
 
     public void addToPos(float[] pos) {
-        this.pos = Vector3.add(this.pos, pos);
+        this.position = Vector3.add(this.position, pos);
     }
 }

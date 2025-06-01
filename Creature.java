@@ -2,7 +2,7 @@ import java.io.IOException;
 import java.util.Arrays;
 
 public class Creature extends ObjFile {
-    private static final float GRAVITY = 0.02f;
+    private float gravity;
     private static final int STATE_DEAD = 0;
     private static final int STATE_ALIVE = 1;
     private static final int STATE_DAMAGE = 2;
@@ -18,17 +18,14 @@ public class Creature extends ObjFile {
     private boolean onGround = true;
     private final float speedMaxXZ = 1f;
     private final float speedMaxY = 1.6f;
-    final float hitBoxRadius;
     private final DVector collisionResistance = new DVector();
-    private final Timer timer = new Timer();
 
-    public Creature(float[] pos, float scale, float[] rotation, String objFile, float hitBoxRadius, int textureIndex) throws IOException {
-        super(pos, scale, objFile, textureIndex);
-        this.hitBoxRadius = hitBoxRadius;
-        setRotation(rotation);
+    public Creature(float[] pos, float[] rot, float scale, String objFile, int textureIndex) throws IOException {
+        super(pos, rot, scale, objFile, textureIndex);
     }
 
-    public void updateCreature(WorldBase world) {
+    public void update(WorldBase world) {
+        gravity = world.getGRAVITY();
         checkCollision(world, true);
         updatePosition();
         updateState();
@@ -39,7 +36,7 @@ public class Creature extends ObjFile {
 
         for (WorldObject o : world.getObjects()) {
 
-            if (o.getCollision(getPos(), hitBoxRadius)) {
+            if (o.getCollision(getPos(), getCollisionR())) {
                 handleCollision(o, world, bulletCollisionEnabled);
 
 //                float[] normal = o.getNormal(getPos(), hitBoxRadius);
@@ -52,16 +49,17 @@ public class Creature extends ObjFile {
 
     private void handleCollision(WorldObject o, WorldBase world, boolean bulletCollisionEnabled) {
         if (o instanceof TimeSphere timeSphere) {
-            timer.addTime(timeSphere.takeTime());
             world.deleteObject(timeSphere);
-        } else if (o instanceof Bullet bullet && bulletCollisionEnabled) {
-            applyDamage(-bullet.getDamage());
-            bullet.addPenetration();
+        } else if (o instanceof Projectile projectile && bulletCollisionEnabled) {
+            if(projectile instanceof Missile missile){
+                applyDamage(-missile.getDamage());
+                missile.addPenetration();
+            }///лучше перегрузить метод в колизии!? наверное
         }
     }
 
     private void updatePosition() {
-        if (speedX == 0 && speedY == 0 && speedZ == 0|| state == STATE_DEAD) return;
+        if (speedX == 0 && speedY == 0 && speedZ == 0 || state == STATE_DEAD) return;
 
         float[] XOffset = Vector3.resist(Vector3.scale(getDirection(), speedX), collisionResistance);
         float[] direction = getDirection();
@@ -79,10 +77,10 @@ public class Creature extends ObjFile {
 
     private void applyGravity() {
         if (getPos()[1] > 1f) {
-            speedY -= GRAVITY;
+            speedY -= gravity;
         } else {
             float y = getPos()[1];
-            addToPos(new float[]{0, -y + 1f, 0});
+            addToPos(new float[]{0, -y, 0});
             onGround = true;
             speedY = 0;
         }
@@ -122,6 +120,7 @@ public class Creature extends ObjFile {
     void rotateXn(float angle) {
         addToRotation(new float[]{0, -angle, 0});
     }
+
     void rotateYn(float angle) {
         addToRotation(new float[]{-angle, 0, 0});
     }
@@ -134,17 +133,17 @@ public class Creature extends ObjFile {
         speedX = -speedMaxXZ;
     }
 
-    void moveLeft() { speedZ = speedMaxXZ; }
+    void moveLeft() {
+        speedZ = speedMaxXZ;
+    }
 
-    void moveRight() { speedZ = -speedMaxXZ; }
+    void moveRight() {
+        speedZ = -speedMaxXZ;
+    }
 
 
     int getHealth() {
         return health;
-    }
-
-    Timer getTimer() {
-        return timer;
     }
 
     public void applyDamage(int deltaHealth) {

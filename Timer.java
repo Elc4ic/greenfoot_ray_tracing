@@ -1,12 +1,16 @@
 import greenfoot.*;
 
-import java.util.concurrent.atomic.AtomicLong;
-
 public class Timer extends Actor {
-    private long time = 0 ;
+    private long time = 0;
+    private long dT = 0;
+    private long dt;
     private long newFrameTimeMillis = System.nanoTime();
     private long oldFrameTimeMillis = newFrameTimeMillis;
     GreenfootImage img;
+
+    public Timer(int tickRate) {
+        dt = 1000000000L / tickRate;
+    }
 
     public void act() {
         img = new GreenfootImage(
@@ -14,7 +18,6 @@ public class Timer extends Actor {
                 18, Color.RED, Color.BLACK
         );
         setImage(img);
-        update();
     }
 
     public boolean update() {
@@ -22,7 +25,13 @@ public class Timer extends Actor {
         this.newFrameTimeMillis = System.nanoTime();
         long frame = newFrameTimeMillis - oldFrameTimeMillis;
         time = Math.max(time + frame, 0);
-        return isZero();
+        dT += frame;
+        if (dT >= dt) {
+            dT = 0;
+            return true;
+        } else {
+            return false;
+        }
     }
 
     public void addTime(long time) {

@@ -3,24 +3,20 @@ import greenfoot.GreenfootImage;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Random;
 import java.util.Stack;
 
 public class WorldBase {
 
+    private final float GRAVITY = 0.3f;
     private final ArrayList<WorldObject> objects = new ArrayList<>();
     private final Stack<WorldObject> objectsOnDestroy = new Stack<>();
     private final Stack<WorldObject> objectsOnAdd = new Stack<>();
-    private final Random r = new Random();
-    TextureCollection textureCollection = TextureCollection.getInstance();
-    private int maxTimeSpheres = 150;
-    private int maxTimeCounter = 0;
+    private int maxObjects = 150;
+    private int objectsCounter = 0;
     public boolean needUpdateBuffers = false;
 
     public WorldBase(Hero hero) throws IOException {
         objects.add(hero);
-        Texture orbTexture = new Texture("images\\orb.png", "orb");
-        textureCollection.addTexture(orbTexture);
     }
 
     public void update() throws IOException {
@@ -29,13 +25,8 @@ public class WorldBase {
 //            if (o instanceof Npc npc) {
 //                if (npc.updateNpc(objectsOnAdd, this)) objectsOnDestroy.add(o);
 //            }
-            if (o instanceof ObjFile obj) {
-                obj.addToRotation(new float[]{0, 2, 0});
-            }
-            if (o instanceof Bullet) {
-                if (((Bullet) o).update()) {
-                    objectsOnDestroy.add(o);
-                }
+            if (o instanceof Projectile projectile) {
+                if (projectile.update()) objectsOnDestroy.add(o);
             }
 //            if (r.nextInt(10) == 1) addTimeSphere();
         }
@@ -47,7 +38,11 @@ public class WorldBase {
         }
     }
 
-//    public void addTimeSphere() throws IOException {
+    public float getGRAVITY() {
+        return GRAVITY;
+    }
+
+    //    public void addTimeSphere() throws IOException {
 //        if (maxTimeCounter >= maxTimeSpheres) return;
 //        needUpdateBuffers = true;
 //        objectsOnAdd.add(new TimeSphere(
@@ -62,13 +57,19 @@ public class WorldBase {
 //    }
 
     public void deleteObject(WorldObject o) {
-        if (o instanceof TimeSphere) maxTimeCounter--;
+        objectsCounter--;
         needUpdateBuffers = true;
         objectsOnDestroy.add(o);
     }
 
+    public void addObject(WorldObject o) {
+        objectsCounter++;
+        needUpdateBuffers = true;
+        objectsOnAdd.add(o);
+    }
+
     public GreenfootImage getLoadScreen() {
-        GreenfootImage img = new GreenfootImage(Const.SCALED_WIDTH, Const.SCALED_HEIGHT);
+        GreenfootImage img = new GreenfootImage(Const.WIDTH, Const.HEIGHT);
         img.setColor(Color.BLACK);
         img.fill();
         GreenfootImage img2 = new GreenfootImage(
@@ -85,10 +86,6 @@ public class WorldBase {
 
     ArrayList<WorldObject> getObjects() {
         return objects;
-    }
-
-    Random getR() {
-        return r;
     }
 
 }

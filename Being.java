@@ -6,14 +6,17 @@ public class Being extends WorldBase {
 
     public Being(Hero hero) throws IOException {
         super(hero);
+        TextureCollection textureCollection = TextureCollection.getInstance();
         try {
             getObjects().add(new ObjFile(
+                    new float[]{0, 0, 0},
                     new float[]{0, 0, 0},
                     50f,
                     "models\\plane.obj",
                     textureCollection.getIndex("map")
             ));
             getObjects().add(new ObjFile(
+                    new float[]{0, 0, 0},
                     new float[]{0, 0, 0},
                     3f,
                     "models\\enemy.obj",

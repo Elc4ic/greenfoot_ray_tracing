@@ -4,24 +4,18 @@ import greenfoot.MouseInfo;
 import java.io.IOException;
 
 public class Hero extends Creature {
+    private long exp = 0;
 
-    Camera camera;
-    int gunInUse;
-    int gunInHand;
     private int prevMouseX = 0;
     private int prevMouseY = 0;
-    private boolean firstMouseMove = true;
 
-    public Hero(float[] pos, float scale, float[] rotation, Camera camera, int textureIndex) throws IOException {
-        super(pos, scale, rotation, "models\\block.obj", 0.5f, textureIndex);
-        this.camera = camera;
-        gunInUse = 0;
-        gunInHand = 0;
+    public Hero(float[] pos, float[] rot, float scale, int textureIndex) throws IOException {
+        super(pos, rot, scale, "models\\block.obj", textureIndex);
     }
 
     void updateHero(WorldBase worldBase) {
         control();
-        updateCreature(worldBase);
+        update(worldBase);
     }
 
     void control() {
@@ -55,5 +49,4 @@ public class Hero extends Creature {
             jump();
         }
     }
-
 }
