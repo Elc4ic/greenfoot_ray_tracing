@@ -5,7 +5,6 @@ import greenfoot.*;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.stream.IntStream;
 
@@ -15,8 +14,9 @@ public class TheWorld extends World {
     private final Interface interface1;
     private final Camera camera = new Camera(90);
     TextureCollection textures = TextureCollection.getInstance();
-    private final Hero hero = new Hero(new float[]{0, 0, 0}, 0.5f, new float[]{0, 0, 0}, camera, 2);
+    private final Hero hero = new Hero(new float[]{0, 0, 0}, new float[]{0, 0, 0}, 0.5f, 2);
     private WorldBase worldBase;
+    private final Timer timer = new Timer(Const.TICK_RATE);
 
     private final FPSCounter fPSCounter = new FPSCounter();
     GreenfootImage frame = new GreenfootImage(Const.WIDTH, Const.HEIGHT);
@@ -35,17 +35,20 @@ public class TheWorld extends World {
     private final int[] output = new int[Const.HEIGHT * Const.WIDTH];
 
     public TheWorld() throws IOException {
-        super(Const.SCALED_WIDTH, Const.SCALED_HEIGHT, 1);
+        super(Const.WIDTH, Const.HEIGHT, 1);
 
         Texture mapTexture = new Texture("images\\map.png", "map");
         Texture badanTexture = new Texture("images\\badan.png", "badan");
+        Texture orbTexture = new Texture("images\\orb.png", "orb");
+
         textures.addTexture(mapTexture);
         textures.addTexture(badanTexture);
+        textures.addTexture(orbTexture);
 
         worldBase = new Being(hero);
         interface1 = new Interface(hero, fPSCounter);
-        addObject(interface1, interface1.getImg().getWidth() / 2, Const.SCALED_HEIGHT - interface1.getImg().getHeight() / 2);
-        addObject(hero.getTimer(), Const.SCALED_WIDTH / 2, 20);
+        addObject(interface1, interface1.getImg().getWidth() / 2, Const.HEIGHT - interface1.getImg().getHeight() / 2);
+        addObject(timer, Const.WIDTH / 2, 20);
         loadScreen();
         initWorld();
     }
@@ -60,9 +63,9 @@ public class TheWorld extends World {
     }
 
     public void act() {
-        if (hero.state == 0 || hero.getTimer().isZero()) {
+        if (hero.state == 0) {
             lose();
-        } else if (hero.state == -1) {
+        } else if (timer.getTime() >= Const.WIN_TIME) {
             win();
         } else {
 
@@ -70,14 +73,17 @@ public class TheWorld extends World {
                 initWorld();
             }
             render();
-            try {
-                worldBase.update();
-            } catch (IOException e) {
-                throw new RuntimeException(e);
+
+            if (timer.update()) {
+                try {
+                    worldBase.update();
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
+                hero.updateHero(worldBase);
+                camera.bindToHero(hero);
+                interface1.update();
             }
-            hero.updateHero(worldBase);
-            camera.bindToHero(hero);
-            interface1.update();
         }
         fPSCounter.update();
     }
@@ -141,7 +147,6 @@ public class TheWorld extends World {
 
         rasterizer.dispose();
 
-        frame.scale(Const.SCALED_WIDTH, Const.SCALED_HEIGHT);
         setBackground(frame);
     }
 

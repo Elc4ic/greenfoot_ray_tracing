@@ -24,11 +24,10 @@ public class ObjFile extends WorldObject {
     public static final int ROTATION_Y = 1;
     public static final int ROTATION_Z = 2;
 
-    public ObjFile(float[] pos, float scale, String filePath, int textureIndex) throws IOException {
+    public ObjFile(float[] pos, float[] rotation, float scale, String filePath, int textureIndex) throws IOException {
+        super(pos, rotation);
+
         this.scale = scale;
-
-        setPos(pos);
-
         this.textureIndex = textureIndex;
 
         List<String> lines = Files.readAllLines(Paths.get(filePath));
@@ -99,16 +98,6 @@ public class ObjFile extends WorldObject {
             t.setObjIndex(index);
         }
         return triangles;
-    }
-
-    @Override
-    public boolean getCollision(float[] pos, float radius) {
-        return false;
-    }
-
-    @Override
-    public float[] getNormal(float[] point, float r) {
-        return null;
     }
 
 }
