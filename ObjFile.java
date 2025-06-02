@@ -6,9 +6,6 @@ import java.util.List;
 
 public class ObjFile extends WorldObject {
     private final List<Triangle> triangles = new ArrayList<>();
-    private final List<float[]> vertices = new ArrayList<>();
-    private final List<float[]> texCoords = new ArrayList<>();
-    private List<int[]> faces = new ArrayList<>();
 
     private float scale;
 
@@ -31,6 +28,10 @@ public class ObjFile extends WorldObject {
         this.textureIndex = textureIndex;
 
         List<String> lines = Files.readAllLines(Paths.get(filePath));
+        List<float[]> vertices = new ArrayList<>();
+        List<float[]> texCoords = new ArrayList<>();
+        List<int[]> faces = new ArrayList<>();
+
         for (String line : lines) {
             if (line.startsWith("v ")) {
                 String[] parts = line.split("\\s+");
@@ -100,5 +101,9 @@ public class ObjFile extends WorldObject {
         return triangles;
     }
 
+    @Override
+    public boolean update() {
+        return false;
+    }
 }
 

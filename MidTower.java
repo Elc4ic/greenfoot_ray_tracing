@@ -11,33 +11,26 @@ public class MidTower extends Weapon {
     private int projectileCount = 2;
     private long fireInterval = 4 * Const.SECOND;
 
-    public MidTower(Hero hero) throws IOException {
-        super(
-                hero.getPos(), new float[]{0, 0, 0}, 1f,
-                "models\\midTower.obj",
-                "images\\midTower.png",
-                TextureCollection.getInstance().getIndex("midTower"),
-                hero
-        );
+    public MidTower(Hero hero) {
+        super(hero, "models\\midTower.obj", "images\\midTower.png");
     }
 
-
     @Override
-    public void fire(WorldBase worldBase) {
+    public void fire() {
         if (System.nanoTime() - getLastFireTime() < fireInterval) return;
 
         for (int i = 0; i < projectileCount; i++) {
             float bombPos[] = new float[]{
-                    getPos()[0] + r.nextFloat() * xOffset / 2,
+                    getHero().getPos()[0] + r.nextFloat() * xOffset / 2,
                     4,
-                    getPos()[2] + r.nextFloat() * zOffset / 2
+                    getHero().getPos()[2] + r.nextFloat() * zOffset / 2
             };
             try {
                 Bomb pc = new Bomb(
                         bombPos, 1f, (int) damage, radius,
                         TextureCollection.getInstance().getIndex("bomb")
                 );
-                worldBase.addObject(pc);
+                WorldBase.getInstance().addObject(pc);
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }

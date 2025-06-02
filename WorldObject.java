@@ -3,12 +3,22 @@ public abstract class WorldObject {
     private float[] position;
     private final float collisionR = 0.5f;
 
+//    private float speedX = 0;
+//    private float speedZ = 0;
+//    private float speedY = 0;
+//    private boolean onGround = true;
+//    private final float speedMaxXZ = 1f;
+//    private final float speedMaxY = 1.6f;
+//    private final DVector collisionResistance = new DVector();
+
     WorldObject(float[] position,float[] rotation) {
         this.position = position;
         this.rotation = rotation;
     }
 
-    public boolean getCollision(float[] pos, float r) {
+    public abstract boolean update();
+
+    public boolean haveCollision(float[] pos, float r) {
         return getDistance(pos) < collisionR + r;
     }
 

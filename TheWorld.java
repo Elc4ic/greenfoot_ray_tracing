@@ -11,19 +11,20 @@ import java.util.stream.IntStream;
 
 public class TheWorld extends World {
 
-    private final Interface interface1;
-    private final Camera camera = new Camera(90);
-    TextureCollection textures = TextureCollection.getInstance();
-    private final Hero hero = new Hero(new float[]{0, 0, 0}, new float[]{0, 0, 0}, 0.5f, 2);
-    private WorldBase worldBase;
-    private final Timer timer = new Timer(Const.TICK_RATE);
 
+    private final Camera camera = new Camera(90);
+    private final Hero hero = new Hero(new float[]{0, 0, 0}, new float[]{0, 0, 0}, 0.5f, 2);
+    private final TextureCollection textureCollection = TextureCollection.getInstance();
+    private WorldBase worldBase;
+
+    private final Timer timer = new Timer(Const.TICK_RATE);
     private final FPSCounter fPSCounter = new FPSCounter();
+    private final Interface interface1 = new Interface(hero, fPSCounter);
     GreenfootImage frame = new GreenfootImage(Const.WIDTH, Const.HEIGHT);
     Kernel rasterizer;
 
-    private List<Triangle> trianglesList = new ArrayList<>();
-    private List<Triangle> tfc_trianglesList = new ArrayList<>();
+    private final List<Triangle> trianglesList = new ArrayList<>();
+    private final List<Triangle> tfc_trianglesList = new ArrayList<>();
 
     private float[] triangles;
     private float[] positions;
@@ -38,15 +39,20 @@ public class TheWorld extends World {
         super(Const.WIDTH, Const.HEIGHT, 1);
 
         Texture mapTexture = new Texture("images\\map.png", "map");
-        Texture badanTexture = new Texture("images\\badan.png", "badan");
         Texture orbTexture = new Texture("images\\orb.png", "orb");
+        Texture bulletTexture = new Texture("images\\bullet.png", "bullet");
+        Texture enemyTexture = new Texture("images\\enemy.png", "enemy");
+        Texture wallTexture = new Texture("images\\wall.png", "wall");
+        Texture portalTexture = new Texture("images\\portal.png", "portal");
 
-        textures.addTexture(mapTexture);
-        textures.addTexture(badanTexture);
-        textures.addTexture(orbTexture);
+        textureCollection.addTexture(mapTexture);
+        textureCollection.addTexture(orbTexture);
+        textureCollection.addTexture(bulletTexture);
+        textureCollection.addTexture(enemyTexture);
+        textureCollection.addTexture(wallTexture);
+        textureCollection.addTexture(portalTexture);
 
-        worldBase = new Being(hero);
-        interface1 = new Interface(hero, fPSCounter);
+        worldBase = WorldBase.initInstance(hero);
         addObject(interface1, interface1.getImg().getWidth() / 2, Const.HEIGHT - interface1.getImg().getHeight() / 2);
         addObject(timer, Const.WIDTH / 2, 20);
         loadScreen();
@@ -80,7 +86,7 @@ public class TheWorld extends World {
                 } catch (IOException e) {
                     throw new RuntimeException(e);
                 }
-                hero.updateHero(worldBase);
+                hero.updateHero();
                 camera.bindToHero(hero);
                 interface1.update();
             }
@@ -100,8 +106,7 @@ public class TheWorld extends World {
         }
         rotations = new float[nOfObj * ObjFile.ROTATION_SIZE];
         positions = new float[nOfObj * ObjFile.POS_SIZE];
-        texture = textures.getTextureBuff();
-
+        texture = textureCollection.getTextureBuff();
     }
 
     private void render() {
@@ -151,7 +156,7 @@ public class TheWorld extends World {
     }
 
     private void initTriangles(List<Triangle> trianglesList) {
-        textureSizes = textures.getTextureSizes(trianglesList);
+        textureSizes = textureCollection.getTextureSizes(trianglesList);
         triangles = new float[trianglesList.size() * Triangle.SIZE];
         for (int i = 0; i < trianglesList.size(); i++) {
             System.arraycopy(trianglesList.get(i).toFloatArray(), 0, triangles, i * Triangle.SIZE, Triangle.SIZE);

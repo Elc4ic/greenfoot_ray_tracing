@@ -15,6 +15,7 @@ public class Interface extends Actor {
                 + "\nFPS: " + fpsCounter.getFPS()
                 + "\nFTM: " + fpsCounter.getFrameTimeMillis(),
                 18, Color.RED, Color.BLACK);
+        setImage(Const.NOTHING);
     }
 
     public void update() {

@@ -2,11 +2,11 @@ import com.aparapi.Kernel;
 
 public class RasterizerKernel extends Kernel {
 
-    private float[] triangles;
-    private int[] textureSizes;
-    private int[] texture;
-    private int width;
-    private int height;
+    private final float[] triangles;
+    private final int[] textureSizes;
+    private final int[] texture;
+    private final int width;
+    private final int height;
 
     public int[] output;
     float[] depth_buffer;

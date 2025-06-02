@@ -2,9 +2,12 @@ import greenfoot.Greenfoot;
 import greenfoot.MouseInfo;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 public class Hero extends Creature {
     private long exp = 0;
+    private List<Weapon> weapons = new ArrayList<>();
 
     private int prevMouseX = 0;
     private int prevMouseY = 0;
@@ -13,9 +16,9 @@ public class Hero extends Creature {
         super(pos, rot, scale, "models\\block.obj", textureIndex);
     }
 
-    void updateHero(WorldBase worldBase) {
+    void updateHero() {
         control();
-        update(worldBase);
+        update();
     }
 
     void control() {
@@ -48,5 +51,13 @@ public class Hero extends Creature {
         if (Greenfoot.isKeyDown("z")) {
             jump();
         }
+    }
+
+    public List<Weapon> getWeapons() {
+        return weapons;
+    }
+
+    public void addWeapon(Weapon weapon) {
+        weapons.add(weapon);
     }
 }

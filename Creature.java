@@ -24,11 +24,13 @@ public class Creature extends ObjFile {
         super(pos, rot, scale, objFile, textureIndex);
     }
 
-    public void update(WorldBase world) {
+    public boolean update() {
+        WorldBase world = WorldBase.getInstance();
         gravity = world.getGRAVITY();
         checkCollision(world, true);
         updatePosition();
         updateState();
+        return false;
     }
 
     void checkCollision(WorldBase world, boolean bulletCollisionEnabled) {
@@ -36,7 +38,7 @@ public class Creature extends ObjFile {
 
         for (WorldObject o : world.getObjects()) {
 
-            if (o.getCollision(getPos(), getCollisionR())) {
+            if (o.haveCollision(getPos(), getCollisionR())) {
                 handleCollision(o, world, bulletCollisionEnabled);
 
 //                float[] normal = o.getNormal(getPos(), hitBoxRadius);
@@ -51,7 +53,7 @@ public class Creature extends ObjFile {
         if (o instanceof TimeSphere timeSphere) {
             world.deleteObject(timeSphere);
         } else if (o instanceof Projectile projectile && bulletCollisionEnabled) {
-            if(projectile instanceof Missile missile){
+            if (projectile instanceof Missile missile) {
                 applyDamage(-missile.getDamage());
                 missile.addPenetration();
             }///лучше перегрузить метод в колизии!? наверное

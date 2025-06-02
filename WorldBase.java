@@ -3,32 +3,55 @@ import greenfoot.GreenfootImage;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Random;
 import java.util.Stack;
 
 public class WorldBase {
+    private static WorldBase instance;
 
+    private WorldBase(Hero hero) throws IOException {
+        this.hero = hero;
+        objects.add(hero);
+
+        objects.add(new ObjFile(
+                        new float[]{0, 0, 0},
+                        new float[]{0, 0, 0},
+                        50f,
+                        "models\\plane.obj",
+                        TextureCollection.getInstance().getIndex("map")
+                )
+        );
+    }
+
+    public static synchronized WorldBase getInstance() {
+        return instance;
+    }
+
+    public static synchronized WorldBase initInstance(Hero hero) throws IOException {
+        if (instance == null) instance = new WorldBase(hero);
+        return instance;
+    }
+
+    private Hero hero;
     private final float GRAVITY = 0.3f;
     private final ArrayList<WorldObject> objects = new ArrayList<>();
     private final Stack<WorldObject> objectsOnDestroy = new Stack<>();
     private final Stack<WorldObject> objectsOnAdd = new Stack<>();
-    private int maxObjects = 150;
-    private int objectsCounter = 0;
+    private final int maxEnemy = 150;
+    private int enemyCounter = 0;
+    private Random r = new Random();
     public boolean needUpdateBuffers = false;
-
-    public WorldBase(Hero hero) throws IOException {
-        objects.add(hero);
-    }
 
     public void update() throws IOException {
         for (WorldObject o : objects) {
             if (o instanceof Hero) continue;
-//            if (o instanceof Npc npc) {
-//                if (npc.updateNpc(objectsOnAdd, this)) objectsOnDestroy.add(o);
-//            }
+            if (o instanceof Enemy enemy) {
+                if (enemy.update()) objectsOnDestroy.add(o);
+            }
             if (o instanceof Projectile projectile) {
                 if (projectile.update()) objectsOnDestroy.add(o);
             }
-//            if (r.nextInt(10) == 1) addTimeSphere();
+            if (r.nextInt(100) == 1) addEnemy();
         }
         while (!objectsOnAdd.empty()) {
             objects.add(objectsOnAdd.pop());
@@ -42,28 +65,27 @@ public class WorldBase {
         return GRAVITY;
     }
 
-    //    public void addTimeSphere() throws IOException {
-//        if (maxTimeCounter >= maxTimeSpheres) return;
-//        needUpdateBuffers = true;
-//        objectsOnAdd.add(new TimeSphere(
-//                new float[]{r.nextInt(100) - 50, 1, r.nextInt(100) - 50},
-//                2f,
-//                ColorOperation.GColorToInt(new Color(130, 130, 130)),
-//                true,
-//                textureCollection.getIndex("orb"),
-//                25000000000L)
-//        );
-//        maxTimeCounter++;
-//    }
+    public void addEnemy() throws IOException {
+        if (enemyCounter >= maxEnemy) return;
+        needUpdateBuffers = true;
+        objectsOnAdd.add(new Enemy(
+                new float[]{hero.getPos()[0] + r.nextInt(60) - 30, 0, hero.getPos()[2] + r.nextInt(60) - 30},
+                new float[]{0, 0, 0},
+                1f,
+                hero,
+                TextureCollection.getInstance().getIndex("enemy"))
+        );
+        enemyCounter++;
+    }
 
     public void deleteObject(WorldObject o) {
-        objectsCounter--;
+        if (o instanceof Enemy) enemyCounter--;
         needUpdateBuffers = true;
         objectsOnDestroy.add(o);
     }
 
     public void addObject(WorldObject o) {
-        objectsCounter++;
+        if (o instanceof Enemy) enemyCounter++;
         needUpdateBuffers = true;
         objectsOnAdd.add(o);
     }
@@ -73,7 +95,7 @@ public class WorldBase {
         img.setColor(Color.BLACK);
         img.fill();
         GreenfootImage img2 = new GreenfootImage(
-                "move: WASD\n aim: find win shape",
+                "SILICONE HELL\n aim: keep alive",
                 50,
                 Color.WHITE,
                 Color.BLACK);

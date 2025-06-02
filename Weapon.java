@@ -2,20 +2,22 @@ import greenfoot.GreenfootImage;
 
 import java.io.IOException;
 
-public abstract class Weapon extends ObjFile {
+public abstract class Weapon {
     private GreenfootImage icon;
     private int lvl = 0;
     private final int maxLvl = 8;
     private long lastFireTime = 0;
+    private String projectileModel;
+    private float scale = 1;
     private Hero hero;
 
-    public Weapon(float[] pos, float[] rot, float scale, String objFile, String icon, int textureIndex,Hero hero) throws IOException {
-        super(pos, rot, scale, objFile, textureIndex);
+    public Weapon(Hero hero, String icon, String objFile) {
         this.icon = new GreenfootImage(icon);
         this.hero = hero;
+        this.projectileModel = objFile;
     }
 
-    public abstract void fire(WorldBase worldBase);
+    public abstract void fire();
 
     public abstract void upgrade();
 
@@ -53,5 +55,9 @@ public abstract class Weapon extends ObjFile {
 
     public void setHero(Hero hero) {
         this.hero = hero;
+    }
+
+    public String getProjectileModel() {
+        return projectileModel;
     }
 }
