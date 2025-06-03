@@ -21,6 +21,14 @@ public class WorldBase {
                         TextureCollection.getInstance().getIndex("map")
                 )
         );
+        objects.add(new ObjFile(
+                        new float[]{0, 0, 0},
+                        new float[]{0, 0, 0},
+                        0.04f,
+                        "models\\albedo.obj",
+                        TextureCollection.getInstance().getIndex("albedo")
+                )
+        );
     }
 
     public static synchronized WorldBase getInstance() {
@@ -37,7 +45,7 @@ public class WorldBase {
     private final ArrayList<WorldObject> objects = new ArrayList<>();
     private final Stack<WorldObject> objectsOnDestroy = new Stack<>();
     private final Stack<WorldObject> objectsOnAdd = new Stack<>();
-    private final int maxEnemy = 150;
+    private final int maxEnemy = 2;
     private int enemyCounter = 0;
     private Random r = new Random();
     public boolean needUpdateBuffers = false;
@@ -45,12 +53,8 @@ public class WorldBase {
     public void update() throws IOException {
         for (WorldObject o : objects) {
             if (o instanceof Hero) continue;
-            if (o instanceof Enemy enemy) {
-                if (enemy.update()) objectsOnDestroy.add(o);
-            }
-            if (o instanceof Projectile projectile) {
-                if (projectile.update()) objectsOnDestroy.add(o);
-            }
+            if (o instanceof Enemy enemy && enemy.update()) deleteObject(o);
+            if (o instanceof Projectile projectile && projectile.update()) deleteObject(o);
             if (r.nextInt(100) == 1) addEnemy();
         }
         while (!objectsOnAdd.empty()) {

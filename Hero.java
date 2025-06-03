@@ -14,11 +14,19 @@ public class Hero extends Creature {
 
     public Hero(float[] pos, float[] rot, float scale, int textureIndex) throws IOException {
         super(pos, rot, scale, "models\\block.obj", textureIndex);
+        setBulletCollisionEnabled(false);
     }
 
     void updateHero() {
         control();
         update();
+        updateWeapons();
+    }
+
+    private void updateWeapons() {
+        for (Weapon weapon : weapons) {
+            weapon.fire();
+        }
     }
 
     void control() {

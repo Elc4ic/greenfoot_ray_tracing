@@ -41,6 +41,27 @@ public class Triangle {
         return new float[]{v1[0], v1[1], v1[2], v1[3], v1[4], v2[0], v2[1], v2[2], v2[3], v2[4], v3[0], v3[1], v3[2], v3[3], v3[4]};
     }
 
+
+    Triangle transform(List<WorldObject> objects) {
+        float[] pos = objects.get(objIndex).getPos();
+        float[] rotor = objects.get(objIndex).getRotation();
+        return new Triangle(
+                transformVertex(v1, pos, rotor),
+                transformVertex(v2, pos, rotor),
+                transformVertex(v3, pos, rotor),
+                textureIndex
+        );
+    }
+
+    float[] transformVertex(float[] v, float[] pos, float[] rotor) {
+        float[] nv = new float[]{v[0], v[1], v[2], v[3], v[4]};
+        Vector3.rotate(nv, rotor);
+        nv[0] += pos[0];
+        nv[1] += pos[1];
+        nv[2] += pos[2];
+        return nv;
+    }
+
     Triangle flat(Camera camera) {
         return new Triangle(
                 flatVertex(v1, camera),
@@ -63,40 +84,22 @@ public class Triangle {
         float x = xzX * camera.cosZ() - yzY * camera.sinZ();
         float y = xzX * camera.sinZ() + yzY * camera.cosZ();
 
-        if (z <= Const.EPSILON) z = Const.EPSILON;
+        if (z < Const.EPSILON) z = Const.EPSILON;
 
-        float px = (x / z) * camera.fov ;
+        float px = (x / z) * camera.fov;
         float py = (y / z) * camera.fov;
 
         int screenX = (int) ((px + 1) * Const.WIDTH * 0.5f);
         int screenY = (int) ((1 - py) * Const.HEIGHT * 0.5f);
+
         screenX = Math.max(0, Math.min(Const.WIDTH - 1, screenX));
         screenY = Math.max(0, Math.min(Const.HEIGHT - 1, screenY));
 
         return new float[]{screenX, screenY, z, v[3], v[4]};
     }
 
-    Triangle transform(List<WorldObject> objects) {
-        float[] pos = objects.get(objIndex).getPos();
-        float[] rotor = objects.get(objIndex).getRotation();
-        return new Triangle(
-                transformVertex(v1, pos, rotor),
-                transformVertex(v2, pos, rotor),
-                transformVertex(v3, pos, rotor),
-                textureIndex
-        );
-    }
-
-    float[] transformVertex(float[] v, float[] pos, float[] rotor) {
-        float[] nv = new float[]{v[0], v[1], v[2], v[3], v[4]};
-        Vector3.rotate(nv, rotor);
-        nv[0] += pos[0];
-        nv[1] += pos[1];
-        nv[2] += pos[2];
-        return nv;
-    }
-
-    List<Triangle> clip(float NEAR_PLANE) {
+    List<Triangle> clip() {
+        float NEAR_PLANE = Const.EPSILON;
         List<float[]> inside = new ArrayList<>();
         List<float[]> outside = new ArrayList<>();
 
@@ -130,13 +133,22 @@ public class Triangle {
     }
 
     private static float[] interpolate(float[] a, float[] b, float nearZ) {
+        float invZa = 1f / a[2];
+        float invZb = 1f / b[2];
+        float ua = a[3] * invZa;
+        float ub = b[3] * invZb;
+        float va = a[4] * invZa;
+        float vb = b[4] * invZb;
+
         float t = (nearZ - a[2]) / (b[2] - a[2]);
+        float u_interp = (ua + (ub - ua) * t) / (invZa + (invZb - invZa) * t);
+        float v_interp = (va + (vb - va) * t) / (invZa + (invZb - invZa) * t);
         return new float[]{
                 a[0] + (b[0] - a[0]) * t,
                 a[1] + (b[1] - a[1]) * t,
                 nearZ,
-                a[3] + (b[3] - a[3]) * t,
-                a[4] + (b[4] - a[4]) * t
+                a[3],
+                a[4]
         };
     }
 }

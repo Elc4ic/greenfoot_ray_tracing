@@ -20,6 +20,7 @@ public class TheWorld extends World {
     private final Timer timer = new Timer(Const.TICK_RATE);
     private final FPSCounter fPSCounter = new FPSCounter();
     private final Interface interface1 = new Interface(hero, fPSCounter);
+    private final Inventory inventory = new Inventory(hero);
     GreenfootImage frame = new GreenfootImage(Const.WIDTH, Const.HEIGHT);
     Kernel rasterizer;
 
@@ -27,8 +28,6 @@ public class TheWorld extends World {
     private final List<Triangle> tfc_trianglesList = new ArrayList<>();
 
     private float[] triangles;
-    private float[] positions;
-    private float[] rotations;
     private int[] texture;
     private int[] textureSizes;
 
@@ -39,22 +38,32 @@ public class TheWorld extends World {
         super(Const.WIDTH, Const.HEIGHT, 1);
 
         Texture mapTexture = new Texture("images\\map.png", "map");
+        Texture bTexture = new Texture("images\\badan.png", "albedo");
         Texture orbTexture = new Texture("images\\orb.png", "orb");
         Texture bulletTexture = new Texture("images\\bullet.png", "bullet");
         Texture enemyTexture = new Texture("images\\enemy.png", "enemy");
         Texture wallTexture = new Texture("images\\wall.png", "wall");
         Texture portalTexture = new Texture("images\\portal.png", "portal");
+        Texture wtTexture = new Texture("images\\wifi_texture.png", "wifi_texture");
 
         textureCollection.addTexture(mapTexture);
+        textureCollection.addTexture(bTexture);
         textureCollection.addTexture(orbTexture);
         textureCollection.addTexture(bulletTexture);
         textureCollection.addTexture(enemyTexture);
         textureCollection.addTexture(wallTexture);
         textureCollection.addTexture(portalTexture);
+        textureCollection.addTexture(wtTexture);
+
+        texture = textureCollection.initTextureBuff();
 
         worldBase = WorldBase.initInstance(hero);
         addObject(interface1, interface1.getImg().getWidth() / 2, Const.HEIGHT - interface1.getImg().getHeight() / 2);
+        addObject(inventory, 20, 20);
         addObject(timer, Const.WIDTH / 2, 20);
+
+        hero.addWeapon(new WiFi(hero));
+        hero.addWeapon(new RJ45(hero));
         loadScreen();
         initWorld();
     }
@@ -89,6 +98,7 @@ public class TheWorld extends World {
                 hero.updateHero();
                 camera.bindToHero(hero);
                 interface1.update();
+                inventory.update();
             }
         }
         fPSCounter.update();
@@ -104,22 +114,21 @@ public class TheWorld extends World {
                 nOfObj++;
             }
         }
-        rotations = new float[nOfObj * ObjFile.ROTATION_SIZE];
-        positions = new float[nOfObj * ObjFile.POS_SIZE];
-        texture = textureCollection.getTextureBuff();
     }
 
     private void render() {
         tfc_trianglesList.clear();
 
         trianglesList.forEach(
-                t -> tfc_trianglesList.addAll(t.transform(worldBase.getObjects()).flat(camera).clip(0.01f))
+                t -> tfc_trianglesList.addAll(t.transform(worldBase.getObjects()).flat(camera).clip())
         );
 
         initTriangles(tfc_trianglesList);
 
-        IntStream.range(0, Const.PICXELS).forEach(i -> depth_buffer[i] = Float.MAX_VALUE);
-        IntStream.range(0, Const.PICXELS).forEach(i -> output[i] = 0xffffff);
+        IntStream.range(0, Const.PICXELS).forEach(i -> {
+            depth_buffer[i] = Float.MAX_VALUE;
+            output[i] = 0xffffffff;
+        });
 
         Range range = Range.create(triangles.length / Triangle.SIZE);
 
@@ -134,8 +143,6 @@ public class TheWorld extends World {
         rasterizer.setExplicit(true);
 
         rasterizer.put(triangles);
-        rasterizer.put(positions);
-        rasterizer.put(rotations);
         rasterizer.put(camera.getPos());
         rasterizer.put(camera.getRotations());
         rasterizer.put(textureSizes);

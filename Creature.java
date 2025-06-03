@@ -3,10 +3,10 @@ import java.util.Arrays;
 
 public class Creature extends ObjFile {
     private float gravity;
-    private static final int STATE_DEAD = 0;
-    private static final int STATE_ALIVE = 1;
-    private static final int STATE_DAMAGE = 2;
-    private static final int STATE_HEAL = 3;
+    static final int STATE_DEAD = 0;
+    static final int STATE_ALIVE = 1;
+    static final int STATE_DAMAGE = 2;
+    static final int STATE_HEAL = 3;
 
     private int health = 100;
     private final int healthMax = 100;
@@ -19,6 +19,7 @@ public class Creature extends ObjFile {
     private final float speedMaxXZ = 1f;
     private final float speedMaxY = 1.6f;
     private final DVector collisionResistance = new DVector();
+    private boolean bulletCollisionEnabled = true;
 
     public Creature(float[] pos, float[] rot, float scale, String objFile, int textureIndex) throws IOException {
         super(pos, rot, scale, objFile, textureIndex);
@@ -27,35 +28,34 @@ public class Creature extends ObjFile {
     public boolean update() {
         WorldBase world = WorldBase.getInstance();
         gravity = world.getGRAVITY();
-        checkCollision(world, true);
+        checkCollision(world);
         updatePosition();
         updateState();
-        return false;
+        return state == STATE_DEAD;
     }
 
-    void checkCollision(WorldBase world, boolean bulletCollisionEnabled) {
+    void checkCollision(WorldBase world) {
         collisionResistance.clear();
 
         for (WorldObject o : world.getObjects()) {
 
             if (o.haveCollision(getPos(), getCollisionR())) {
-                handleCollision(o, world, bulletCollisionEnabled);
+                handleCollision(o);
 
 //                float[] normal = o.getNormal(getPos(), hitBoxRadius);
 //                collisionResistance.setAdsMax(normal);
 
             }
         }
-
     }
 
-    private void handleCollision(WorldObject o, WorldBase world, boolean bulletCollisionEnabled) {
-        if (o instanceof TimeSphere timeSphere) {
-            world.deleteObject(timeSphere);
-        } else if (o instanceof Projectile projectile && bulletCollisionEnabled) {
+    private void handleCollision(WorldObject o) {
+        if (o instanceof Projectile projectile && bulletCollisionEnabled) {
+
             if (projectile instanceof Missile missile) {
                 applyDamage(-missile.getDamage());
                 missile.addPenetration();
+                addToPos(Vector3.scale(missile.getNormal(), -missile.getRepulsion()));
             }///лучше перегрузить метод в колизии!? наверное
         }
     }
@@ -183,6 +183,10 @@ public class Creature extends ObjFile {
 
     public void setSpeedY(float speedY) {
         this.speedY = speedY;
+    }
+
+    public void setBulletCollisionEnabled(boolean bulletCollisionEnabled) {
+        this.bulletCollisionEnabled = bulletCollisionEnabled;
     }
 }
 

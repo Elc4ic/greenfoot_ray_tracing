@@ -5,7 +5,7 @@ public class Bomb extends Projectile {
     private float explodeRadius = 0.5f;
 
     public Bomb(float[] pos, float scale, int damage,float radius, int textureIndex) throws IOException {
-        super(pos, scale, textureIndex);
+        super(pos, scale,"models\\orb.obj", textureIndex);
         this.damage = damage;
         this.explodeRadius = radius;
     }

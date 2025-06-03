@@ -11,10 +11,10 @@ public abstract class Weapon {
     private float scale = 1;
     private Hero hero;
 
-    public Weapon(Hero hero, String icon, String objFile) {
+    public Weapon(Hero hero, String icon, String model) {
         this.icon = new GreenfootImage(icon);
         this.hero = hero;
-        this.projectileModel = objFile;
+        this.projectileModel = model;
     }
 
     public abstract void fire();

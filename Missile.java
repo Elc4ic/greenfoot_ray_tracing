@@ -1,4 +1,5 @@
 import java.io.IOException;
+
 /// Снаряд летит в определенном направлении, имеет количество пробитий
 public class Missile extends Projectile {
     private int damage;
@@ -8,9 +9,10 @@ public class Missile extends Projectile {
     private float distanceMax;
     private float distance = 0;
     private float[] normal;
+    private float repulsion = 1.5f;
 
-    public Missile(float[] pos, float[] normal, float scale, float speed, int damage, float distanceMax, int penetrationMax, int textureIndex) throws IOException {
-        super(pos, scale, textureIndex);
+    public Missile(float[] pos, float[] normal, String model, float scale, float speed, int damage, float distanceMax, int penetrationMax, int textureIndex) throws IOException {
+        super(pos, scale, model, textureIndex);
         this.speed = speed;
         this.damage = damage;
         this.distanceMax = distanceMax;
@@ -21,7 +23,7 @@ public class Missile extends Projectile {
     @Override
     public boolean update() {
         if (distance >= distanceMax || penetration >= penetrationMax) return true;
-        float[] move = Vector3.scale(normal, speed);
+        float[] move = Vector3.scale(normal, -speed);
         distance += Vector3.length(move);
         addToPos(move);
         return false;
@@ -35,6 +37,14 @@ public class Missile extends Projectile {
     @Override
     public void destroy(WorldBase worldBase) {
         worldBase.deleteObject(this);
+    }
+
+    public float[] getNormal() {
+        return normal;
+    }
+
+    public float getRepulsion() {
+        return repulsion;
     }
 
     public void addPenetration() {

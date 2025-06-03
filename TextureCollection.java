@@ -30,6 +30,7 @@ public class TextureCollection {
     private static TextureCollection instance;
 
     List<Texture> textures;
+    int[] textureBuff;
     private Map<String, Integer> nameToIndexMap;
 
     public static final int INFO_SIZE = 3;
@@ -93,12 +94,16 @@ public class TextureCollection {
         return textureSizes;
     }
 
-    int[] getTextureBuff() {
-        int[] textureBuff = new int[getAllTexturesSize()];
+    int[] initTextureBuff() {
+        textureBuff = new int[getAllTexturesSize()];
         for (int i = 0; i < textures.size(); i++) {
             int[] text = getTexture(i).textureBuff;
             System.arraycopy(text, 0, textureBuff, getOffset(i), text.length);
         }
+        return textureBuff;
+    }
+
+    public int[] getTextureBuff() {
         return textureBuff;
     }
 }

@@ -26,10 +26,10 @@ public class Camera {
 
     public void bindToHero(Hero hero) {
         float[] dir = hero.getDirection();
-        float[] heroHorizontalOffset = Vector3.add(hero.getPos(), Vector3.scale(dir, -3));
+        float[] heroHorizontalOffset = Vector3.add(hero.getPos(), Vector3.scale(dir, -5));
         float[] cameraRotation = hero.getRotation();
-        this.pos = Vector3.add(heroHorizontalOffset, new float[]{0, 6, 0});
-        this.rotations = Vector3.add(cameraRotation,new float[]{(float) Math.toRadians(-35),0,0});
+        this.pos = Vector3.add(heroHorizontalOffset, new float[]{0, 7, 0});
+        this.rotations = Vector3.add(cameraRotation,new float[]{(float) Math.toRadians(-30),0,0});
     }
 
     public float sinX() {

@@ -7,7 +7,7 @@ public class Flash extends Projectile {
     private long oldTime;
 
     public Flash(float[] pos, float scale, int damage, int textureIndex) throws IOException {
-        super(pos, scale, textureIndex);
+        super(pos, scale,"models\\block.obj", textureIndex);
         this.damage = damage;
     }
 

@@ -8,7 +8,8 @@ public class Inventory extends Actor {
     GreenfootImage img = new GreenfootImage("inventory.png");
     Hero hero;
 
-    public Inventory() {
+    public Inventory(Hero hero) {
+        this.hero = hero;
         setImage(Const.NOTHING);
     }
 
@@ -16,12 +17,13 @@ public class Inventory extends Actor {
 
     }
 
-    public void update(){
+    public void update() {
         List<Weapon> weapons = hero.getWeapons();
         int x = weapons.size() * Const.ICON_SIZE;
         img = new GreenfootImage(x, Const.ICON_SIZE);
         for (int i = 0; i < weapons.size(); i++) {
             img.drawImage(weapons.get(i).getIcon(), i * Const.ICON_SIZE, 0);
         }
+        setImage(img);
     }
 }

@@ -17,10 +17,10 @@ public class Enemy extends Creature {
         attackByRange();
         moveToHero();
         super.update();
-        return false;
+        return state == STATE_DEAD;
     }
 
-    void moveToHero(){
+    void moveToHero() {
         float[] n = Vector3.scale(hero.getNormal(getPos()), -0.2f);
         addToPos(n);
     }
