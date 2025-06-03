@@ -6,8 +6,14 @@ public class Flash extends Projectile {
     private long timeAlive = 0;
     private long oldTime;
 
-    public Flash(float[] pos, float scale, int damage, int textureIndex) throws IOException {
-        super(pos, scale,"models\\block.obj", textureIndex);
+    public Flash(float[] pos, float scale, int damage, long timeToLive, String model, int textureIndex) throws IOException {
+        super(pos, scale, model, textureIndex);
+        this.damage = damage;
+        this.timeToLive = timeToLive;
+    }
+
+    public Flash(float[] pos, float scale, int damage, String model, int textureIndex) throws IOException {
+        super(pos, scale, model, textureIndex);
         this.damage = damage;
     }
 
