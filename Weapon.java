@@ -1,6 +1,7 @@
 import greenfoot.GreenfootImage;
 
 import java.io.IOException;
+import java.util.Random;
 
 public abstract class Weapon {
     private GreenfootImage icon;
@@ -10,11 +11,14 @@ public abstract class Weapon {
     private String projectileModel;
     private float scale = 1;
     private Hero hero;
+    private Random r = new Random();
+    private String name;
 
-    public Weapon(Hero hero, String icon, String model) {
+    public Weapon(Hero hero, String icon, String model, String name) {
         this.icon = new GreenfootImage(icon);
         this.hero = hero;
         this.projectileModel = model;
+        this.name = name;
     }
 
     public abstract void fire();
@@ -59,5 +63,22 @@ public abstract class Weapon {
 
     public String getProjectileModel() {
         return projectileModel;
+    }
+
+    public Random getR() {
+        return r;
+    }
+
+    public String getName() { return name; }
+
+    protected float getDMG(float base){
+        return base * hero.getDmgMult();
+    }
+
+    protected float getAS(float base){
+        return base * hero.getAsMult();
+    }
+    protected int getProj(int base){
+        return base + hero.getBonusProj();
     }
 }

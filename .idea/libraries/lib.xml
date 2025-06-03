@@ -5,7 +5,9 @@
       <root url="file://$PROJECT_DIR$/../../Greenfoot/lib/userlib" />
     </CLASSES>
     <JAVADOC />
-    <SOURCES />
+    <SOURCES>
+      <root url="file://$PROJECT_DIR$/../../Greenfoot/lib/greenfoot/common" />
+    </SOURCES>
     <jarDirectory url="file://$PROJECT_DIR$/../../Greenfoot/lib" recursive="false" />
     <jarDirectory url="file://$PROJECT_DIR$/../../Greenfoot/lib/userlib" recursive="false" />
   </library>

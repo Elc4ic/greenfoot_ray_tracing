@@ -7,6 +7,13 @@ import java.util.List;
 
 public class Hero extends Creature {
     private long exp = 0;
+    private long nextLvlXp = 2;
+    private int lvl = 0;
+    private float dmgMult = 1.0f;
+    private float asMult = 1.0f;
+    private int bonusProj = 0;
+
+
     private List<Weapon> weapons = new ArrayList<>();
 
     private int prevMouseX = 0;
@@ -19,9 +26,11 @@ public class Hero extends Creature {
 
     void updateHero() {
         control();
-        update();
         updateWeapons();
+        update();
+
     }
+
 
     private void updateWeapons() {
         for (Weapon weapon : weapons) {
@@ -38,7 +47,7 @@ public class Hero extends Creature {
             int deltaX = x - prevMouseX;
             int deltaY = y - prevMouseY;
 
-            rotateXn(deltaX);
+            rotateYn(deltaX);
             //rotateYn(deltaY * Const.HEIGHT/Const.WIDTH);
 
             prevMouseX = x;
@@ -67,5 +76,48 @@ public class Hero extends Creature {
 
     public void addWeapon(Weapon weapon) {
         weapons.add(weapon);
+    }
+
+    public long getExp() {
+        return exp;
+    }
+
+    public long getNextLvlXp() {
+        return nextLvlXp;
+    }
+
+    public long getLvl() {
+        return lvl;
+    }
+
+    public float getDmgMult() {
+        return dmgMult;
+    }
+    public void incDmg(float val){
+        dmgMult += val;
+    }
+
+    public float getAsMult() {
+        return asMult;
+    }
+
+    public void incAS(float val){
+        asMult -= val;
+    }
+
+    public int getBonusProj() {
+        return bonusProj;
+    }
+    public void incProj(int val){
+        bonusProj += val;
+    }
+
+    public void addExp(long experience) {
+        this.exp += experience;
+        if (exp >= nextLvlXp) {
+            setState(Creature.STATE_UPGRADE);
+            lvl++;
+            nextLvlXp = nextLvlXp * 2;
+        }
     }
 }
