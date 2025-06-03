@@ -11,7 +11,6 @@ import java.util.stream.IntStream;
 
 public class TheWorld extends World {
 
-
     private final Camera camera = new Camera(90);
     private final Hero hero = new Hero(new float[]{0, 0, 0}, new float[]{0, 0, 0}, 0.5f, 2);
     private final TextureCollection textureCollection = TextureCollection.getInstance();
@@ -59,11 +58,12 @@ public class TheWorld extends World {
 
         worldBase = WorldBase.initInstance(hero);
         addObject(interface1, interface1.getImg().getWidth() / 2, Const.HEIGHT - interface1.getImg().getHeight() / 2);
-        addObject(inventory, 20, 20);
+        addObject(inventory, 40, 40);
         addObject(timer, Const.WIDTH / 2, 20);
 
-        hero.addWeapon(new WiFi(hero));
-        hero.addWeapon(new RJ45(hero));
+//        hero.addWeapon(new WiFi(hero));
+//        hero.addWeapon(new RJ45(hero));
+        hero.addWeapon(new MidTower(hero));
         loadScreen();
         initWorld();
     }

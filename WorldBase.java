@@ -21,14 +21,6 @@ public class WorldBase {
                         TextureCollection.getInstance().getIndex("map")
                 )
         );
-        objects.add(new ObjFile(
-                        new float[]{0, 0, 0},
-                        new float[]{0, 0, 0},
-                        0.04f,
-                        "models\\albedo.obj",
-                        TextureCollection.getInstance().getIndex("albedo")
-                )
-        );
     }
 
     public static synchronized WorldBase getInstance() {
@@ -54,7 +46,7 @@ public class WorldBase {
         for (WorldObject o : objects) {
             if (o instanceof Hero) continue;
             if (o instanceof Enemy enemy && enemy.update()) deleteObject(o);
-            if (o instanceof Projectile projectile && projectile.update()) deleteObject(o);
+            if (o instanceof Projectile projectile && projectile.update()) projectile.destroy(this);
             if (r.nextInt(100) == 1) addEnemy();
         }
         while (!objectsOnAdd.empty()) {
