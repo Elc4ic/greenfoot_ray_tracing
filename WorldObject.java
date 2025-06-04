@@ -1,7 +1,7 @@
 public abstract class WorldObject {
     private float[] rotation;
     private float[] position;
-    private final float collisionR = 0.5f;
+    private float collisionR = 0.5f;
 
     private float gravity = 0.3f;
     private float speedY = 0;
@@ -50,6 +50,10 @@ public abstract class WorldObject {
         return collisionR;
     }
 
+    public void setCollisionR(float collisionR) {
+        this.collisionR = collisionR;
+    }
+
     public float[] getPos() {
         return position;
     }
@@ -63,7 +67,7 @@ public abstract class WorldObject {
         Vector3.rotateZr(direction, rotation[2]);
         Vector3.rotateYr(direction, rotation[1]);
         Vector3.rotateXr(direction, rotation[0]);
-        return direction;
+        return Vector3.normalize(direction);
     }
 
     public void setPos(float[] position) {

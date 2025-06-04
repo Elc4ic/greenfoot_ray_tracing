@@ -44,7 +44,7 @@ public class WorldBase {
 
     public void update() throws IOException {
         for (WorldObject o : objects) {
-            if (o instanceof Hero) continue;
+            if (o instanceof Hero) hero.updateHero();
             if (o instanceof Enemy enemy && enemy.update()) deleteObject(o);
             if (o instanceof Projectile projectile && projectile.update()) projectile.destroy(this);
             if (r.nextInt(100) == 1) addEnemy();

@@ -6,7 +6,7 @@ public class Satellite extends Projectile {
     private MovementFunction movementFunction;
 
     public Satellite(float[] pos, float scale, int damage,String model, int textureIndex) throws IOException {
-        super(pos, scale, model,textureIndex);
+        super(pos,new float[]{0,0,0}, scale, model,textureIndex);
         this.damage = damage;
     }
 

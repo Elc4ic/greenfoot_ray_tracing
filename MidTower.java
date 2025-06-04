@@ -3,7 +3,6 @@ import java.util.Random;
 
 /// Оружие Корпус Mid-Tower - спавнит снаряды, которые падают и взрываются
 public class MidTower extends Weapon {
-    Random r = new Random();
     private float damage = 70f;
     private float radius = 3f;
     private float xOffset = 9f;
@@ -21,9 +20,9 @@ public class MidTower extends Weapon {
 
         for (int i = 0; i < projectileCount; i++) {
             float[] bombPos = new float[]{
-                    getHero().getPos()[0] + r.nextFloat() * xOffset - xOffset / 2,
+                    getHero().getPos()[0] + getR().nextFloat() * xOffset - xOffset / 2,
                     12,
-                    getHero().getPos()[2] + r.nextFloat() * zOffset - zOffset / 2
+                    getHero().getPos()[2] + getR().nextFloat() * zOffset - zOffset / 2
             };
             try {
                 Bomb pc = new Bomb(

@@ -1,6 +1,7 @@
 import greenfoot.GreenfootImage;
 
 import java.io.IOException;
+import java.util.Random;
 
 public abstract class Weapon {
     private GreenfootImage icon;
@@ -10,6 +11,7 @@ public abstract class Weapon {
     private String projectileModel;
     private float scale = 1;
     private Hero hero;
+    private Random r = new Random();
 
     public Weapon(Hero hero, String icon, String model) {
         this.icon = new GreenfootImage(icon);
@@ -59,5 +61,9 @@ public abstract class Weapon {
 
     public String getProjectileModel() {
         return projectileModel;
+    }
+
+    public Random getR() {
+        return r;
     }
 }

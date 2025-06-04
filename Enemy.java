@@ -10,6 +10,7 @@ public class Enemy extends Creature {
     public Enemy(float[] pos, float[] rot, float scale, Hero hero, int textureIndex) throws IOException {
         super(pos, rot, scale, "models\\block.obj", textureIndex);
         this.hero = hero;
+        setCollisionR(scale);
     }
 
     @Override

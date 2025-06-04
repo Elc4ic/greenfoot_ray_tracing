@@ -12,7 +12,7 @@ public class Missile extends Projectile {
     private float repulsion = 1.5f;
 
     public Missile(float[] pos, float[] normal, String model, float scale, float speed, int damage, float distanceMax, int penetrationMax, int textureIndex) throws IOException {
-        super(pos, scale, model, textureIndex);
+        super(pos, new float[]{0, 0, 0}, scale, model, textureIndex);
         this.speed = speed;
         this.damage = damage;
         this.distanceMax = distanceMax;
@@ -23,7 +23,7 @@ public class Missile extends Projectile {
     @Override
     public boolean update() {
         if (distance >= distanceMax || penetration >= penetrationMax) return true;
-        float[] move = Vector3.scale(normal, -speed);
+        float[] move = Vector3.scale(normal, speed);
         distance += Vector3.length(move);
         addToPos(move);
         return false;
@@ -39,12 +39,8 @@ public class Missile extends Projectile {
         worldBase.deleteObject(this);
     }
 
-    public float[] getNormal() {
-        return normal;
-    }
-
-    public float getRepulsion() {
-        return repulsion;
+    public float[] getRepulsion() {
+        return Vector3.scale(normal, repulsion);
     }
 
     public void addPenetration() {

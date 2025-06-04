@@ -35,9 +35,8 @@ public class Creature extends ObjFile {
         collisionResistance.clear();
 
         for (WorldObject o : world.getObjects()) {
-
             if (o.haveCollision(getPos(), getCollisionR())) {
-                handleCollision(o);
+                doOnCollision(o);
 
 //                float[] normal = o.getNormal(getPos(), hitBoxRadius);
 //                collisionResistance.setAdsMax(normal);
@@ -46,14 +45,17 @@ public class Creature extends ObjFile {
         }
     }
 
-    private void handleCollision(WorldObject o) {
+    private void doOnCollision(WorldObject o) {
         if (o instanceof Projectile projectile && bulletCollisionEnabled) {
-
+            applyDamage(-projectile.getDamage());
             if (projectile instanceof Missile missile) {
-                applyDamage(-missile.getDamage());
                 missile.addPenetration();
-                addToPos(Vector3.scale(missile.getNormal(), -missile.getRepulsion()));
-            }///лучше перегрузить метод в колизии!? наверное
+                addToPos(missile.getRepulsion());
+            }else if(projectile instanceof Laser){
+                System.out.println("laser collision");
+            }else {
+                addToPos(Vector3.scale(getDirection(), -1));
+            }
         }
     }
 

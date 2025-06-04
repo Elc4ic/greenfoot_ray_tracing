@@ -23,7 +23,7 @@ public class RJ45 extends Weapon {
             try {
                 Enemy enemy = getNearestEnemy(world.getObjects());
                 if (enemy == null) return;
-                float[] n = enemy.getNormal(getHero().getPos());
+                float[] n = getHero().getNormal(enemy.getPos());
                 Missile pc = new Missile(
                         getHero().getPos(), n, getProjectileModel(), 1f, 1f,
                         (int) damage, 90f, penetrations,

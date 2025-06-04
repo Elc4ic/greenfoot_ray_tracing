@@ -63,7 +63,8 @@ public class TheWorld extends World {
 
 //        hero.addWeapon(new WiFi(hero));
 //        hero.addWeapon(new RJ45(hero));
-        hero.addWeapon(new MidTower(hero));
+//        hero.addWeapon(new MidTower(hero));
+        hero.addWeapon(new OpticFiber(hero));
         loadScreen();
         initWorld();
     }
@@ -95,7 +96,6 @@ public class TheWorld extends World {
                 } catch (IOException e) {
                     throw new RuntimeException(e);
                 }
-                hero.updateHero();
                 camera.bindToHero(hero);
                 interface1.update();
                 inventory.update();

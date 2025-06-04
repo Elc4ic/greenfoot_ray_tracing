@@ -96,6 +96,10 @@ public class Vector3 {
         return new float[]{v[0] + v2[0], v[1] + v2[1], v[2] + v2[2]};
     }
 
+    public static float[] minus(float[] v, float[] v2) {
+        return new float[]{v[0] - v2[0], v[1] - v2[1], v[2] - v2[2]};
+    }
+
     public static float[] subtract(float[] v, float[] v2) {
         return new float[]{v[0] - v2[0], v[1] - v2[1], v[2] - v2[2]};
     }
