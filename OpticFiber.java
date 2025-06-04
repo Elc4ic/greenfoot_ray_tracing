@@ -1,7 +1,7 @@
 import java.io.IOException;
 
 public class OpticFiber extends Weapon {
-    private float damage = 25f;
+    private float damage = 30f;
     private int projectileCount = 6;
     private long fireInterval = 1 * Const.SECOND;
 

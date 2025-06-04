@@ -96,6 +96,7 @@ public class TheWorld extends World {
                 } catch (IOException e) {
                     throw new RuntimeException(e);
                 }
+                hero.updateHero();
                 camera.bindToHero(hero);
                 interface1.update();
                 inventory.update();

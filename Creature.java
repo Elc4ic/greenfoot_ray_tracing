@@ -51,9 +51,7 @@ public class Creature extends ObjFile {
             if (projectile instanceof Missile missile) {
                 missile.addPenetration();
                 addToPos(missile.getRepulsion());
-            }else if(projectile instanceof Laser){
-                System.out.println("laser collision");
-            }else {
+            } else {
                 addToPos(Vector3.scale(getDirection(), -1));
             }
         }
