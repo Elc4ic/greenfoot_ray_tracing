@@ -37,7 +37,7 @@ public class WorldBase {
     private final ArrayList<WorldObject> objects = new ArrayList<>();
     private final Stack<WorldObject> objectsOnDestroy = new Stack<>();
     private final Stack<WorldObject> objectsOnAdd = new Stack<>();
-    private final int maxEnemy = 2;
+    private final int maxEnemy = 10;
     private int enemyCounter = 0;
     private Random r = new Random();
     public boolean needUpdateBuffers = false;
@@ -45,7 +45,7 @@ public class WorldBase {
     public void update() throws IOException {
         for (WorldObject o : objects) {
             if (o instanceof Hero) continue;
-            if (o instanceof Enemy enemy && enemy.update()) deleteObject(o);
+            if (o instanceof Enemy enemy && enemy.update()) enemy.destroy(this);
             if (o instanceof Projectile projectile && projectile.update()) projectile.destroy(this);
             if (r.nextInt(100) == 1) addEnemy();
         }

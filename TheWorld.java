@@ -6,6 +6,7 @@ import greenfoot.*;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 import java.util.stream.IntStream;
 
 
@@ -15,11 +16,25 @@ public class TheWorld extends World {
     private final Hero hero = new Hero(new float[]{0, 0, 0}, new float[]{0, 0, 0}, 0.5f, 2);
     private final TextureCollection textureCollection = TextureCollection.getInstance();
     private WorldBase worldBase;
+    private Random rand = new Random();
 
     private final Timer timer = new Timer(Const.TICK_RATE);
     private final FPSCounter fPSCounter = new FPSCounter();
     private final Interface interface1 = new Interface(hero, fPSCounter);
     private final Inventory inventory = new Inventory(hero);
+    private final Weapon[] weaponsPool = {
+            new RJ45(hero),
+            new WiFi(hero),
+            new MidTower(hero),
+            new OpticFiber(hero),
+            new Disk(hero)
+    };
+    private final ChoisePlate cp1 = new ChoisePlate(hero);
+    private final ChoisePlate cp2 = new ChoisePlate(hero);
+    private final ChoisePlate cp3 = new ChoisePlate(hero);
+    private final ChoiseMenu choiseMenu = new ChoiseMenu(cp1, cp2, cp3);
+
+
     GreenfootImage frame = new GreenfootImage(Const.WIDTH, Const.HEIGHT);
     Kernel rasterizer;
 
@@ -42,18 +57,12 @@ public class TheWorld extends World {
         addObject(interface1, interface1.getImg().getWidth() / 2, Const.HEIGHT - interface1.getImg().getHeight() / 2);
         addObject(inventory, 100, 40);
         addObject(timer, Const.WIDTH / 2, 20);
+        addObject(choiseMenu, Const.WIDTH / 2, Const.HEIGHT / 2);
+        addObject(cp1, Const.WIDTH / 2, Const.HEIGHT / 2);
+        addObject(cp2, Const.WIDTH / 2 - 76, Const.HEIGHT / 2);
+        addObject(cp3, Const.WIDTH / 2 + 76, Const.HEIGHT / 2);
 
-        RJ45 rj45 = new RJ45(hero);
-        rj45.upgrade();
-        rj45.upgrade();
-        rj45.upgrade();
-        rj45.upgrade();
-        rj45.upgrade();
-        hero.addWeapon(new WiFi(hero));
-        hero.addWeapon(rj45);
-        hero.addWeapon(new MidTower(hero));
-        hero.addWeapon(new OpticFiber(hero));
-        hero.addWeapon(new Disk(hero));
+        hero.addWeapon(weaponsPool[rand.nextInt(weaponsPool.length)]);
 
         loadScreen();
         initWorld();
@@ -70,10 +79,16 @@ public class TheWorld extends World {
     }
 
     public void act() {
-        if (hero.state == 0) {
+        if (hero.getState() == Creature.STATE_DEAD) {
             lose();
         } else if (timer.getTime() >= Const.WIN_TIME) {
             win();
+        } else if (hero.getState() == Creature.STATE_UPGRADE) {
+            choiseMenu.showMenu(weaponsPool);
+            if (choiseMenu.isWeaponSelected()) {
+                choiseMenu.hide();
+                hero.setState(Creature.STATE_ALIVE);
+            }
         } else {
 
             if (worldBase.needUpdateBuffers) {

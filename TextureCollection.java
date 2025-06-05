@@ -52,6 +52,7 @@ public class TextureCollection {
         Texture wtTexture = new Texture("images\\wifi_texture.png", "wifi_texture");
         Texture dTexture = new Texture("images\\disk_texture.png", "disk_texture");
         Texture expTexture = new Texture("images\\explode_texture.png", "explode");
+        Texture xpTexture = new Texture("images\\exp_texture.png", "experience");
 
         addTexture(mapTexture);
         addTexture(bTexture);
@@ -63,6 +64,7 @@ public class TextureCollection {
         addTexture(wtTexture);
         addTexture(dTexture);
         addTexture(expTexture);
+        addTexture(xpTexture);
     }
 
     public static synchronized TextureCollection getInstance() {

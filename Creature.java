@@ -6,10 +6,11 @@ public class Creature extends ObjFile {
     static final int STATE_ALIVE = 1;
     static final int STATE_DAMAGE = 2;
     static final int STATE_HEAL = 3;
+    static final int STATE_UPGRADE = 4;
 
     private int health = 100;
     private final int healthMax = 100;
-    int state = STATE_ALIVE;
+    private int state = STATE_ALIVE;
     private int step = 1;
     private float speedX = 0;
     private float speedZ = 0;
@@ -24,10 +25,10 @@ public class Creature extends ObjFile {
 
     public boolean update() {
         WorldBase world = WorldBase.getInstance();
-        checkCollision(world);
         updateHorizontalPosition();
         applyGravity();
         updateState();
+        checkCollision(world);
         return state == STATE_DEAD;
     }
 
@@ -36,7 +37,7 @@ public class Creature extends ObjFile {
 
         for (WorldObject o : world.getObjects()) {
             if (o.haveCollision(getPos(), getCollisionR())) {
-                doOnCollision(o);
+                doOnCollision(o, world);
 
 //                float[] normal = o.getNormal(getPos(), hitBoxRadius);
 //                collisionResistance.setAdsMax(normal);
@@ -45,8 +46,11 @@ public class Creature extends ObjFile {
         }
     }
 
-    private void doOnCollision(WorldObject o) {
-        if (o instanceof Projectile projectile && bulletCollisionEnabled) {
+    private void doOnCollision(WorldObject o, WorldBase world) {
+        if (this instanceof Hero hero && o instanceof Experience exp) {
+            hero.addExp(exp.getExp());
+            world.deleteObject(exp);
+        } else if (o instanceof Projectile projectile && bulletCollisionEnabled) {
             applyDamage(-projectile.getDamage());
             if (projectile instanceof Missile missile) {
                 missile.addPenetration();
@@ -102,11 +106,11 @@ public class Creature extends ObjFile {
         setOnGround(false);
     }
 
-    void rotateXn(float angle) {
+    void rotateYn(float angle) {
         addToRotation(new float[]{0, -angle, 0});
     }
 
-    void rotateYn(float angle) {
+    void rotateXn(float angle) {
         addToRotation(new float[]{-angle, 0, 0});
     }
 
@@ -162,6 +166,14 @@ public class Creature extends ObjFile {
 
     public void setBulletCollisionEnabled(boolean bulletCollisionEnabled) {
         this.bulletCollisionEnabled = bulletCollisionEnabled;
+    }
+
+    public void setState(int state) {
+        this.state = state;
+    }
+
+    public int getState() {
+        return state;
     }
 }
 

@@ -8,16 +8,24 @@ public class WiFi extends Weapon {
     private long fireInterval = Const.SECOND;
     Satellite field;
 
-    public WiFi(Hero hero) throws IOException {
+    public WiFi(Hero hero) {
         super(hero, "images\\wifi.png", "models\\circle.obj");
-        float[] pos = Vector3.add(getHero().getPos(), new float[]{0, 0.5f, 0});
-        field = new Satellite(getHero(), pos, new float[]{0, 0, 0}, radius, (int) damage, getProjectileModel(), TextureCollection.getInstance().getIndex("wifi_texture"));
-        field.setMovementFunction((a, b,c) -> a);
-        WorldBase.getInstance().addObject(field);
     }
 
     @Override
     public void fire() {
+
+        if(field == null) {
+            float[] pos = Vector3.add(getHero().getPos(), new float[]{0, 0.5f, 0});
+            try {
+                field = new Satellite(getHero(), pos, new float[]{0, 0, 0}, radius, (int) damage, getProjectileModel(), TextureCollection.getInstance().getIndex("wifi_texture"));
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+            field.setMovementFunction((a, b,c) -> a);
+            WorldBase.getInstance().addObject(field);
+        }
+
         field.setPos(getHero().getPos());
         if (System.nanoTime() - getLastFireTime() < fireInterval) return;
 
