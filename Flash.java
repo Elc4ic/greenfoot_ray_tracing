@@ -2,7 +2,7 @@ import java.io.IOException;
 
 public class Flash extends Projectile {
     private int damage;
-    private long framesToLive = 5;
+    private long framesToLive = 3;
     private long framesAlive = 0;
 
     public Flash(float[] pos,float[] rot, float scale, int damage, long framesToLive, String model, int textureIndex) throws IOException {

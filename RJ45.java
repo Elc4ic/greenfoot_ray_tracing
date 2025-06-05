@@ -36,11 +36,10 @@ public class RJ45 extends Weapon {
 
         if (projectileFired < projectileCount) {
             projectileFired++;
-            return;
+        } else {
+            projectileFired = 0;
+            setLastFireTime(System.nanoTime());
         }
-
-        projectileFired = 0;
-        setLastFireTime(System.nanoTime());
     }
 
     public Enemy getNearestEnemy(List<WorldObject> objs) {

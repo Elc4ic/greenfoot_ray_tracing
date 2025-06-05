@@ -43,11 +43,17 @@ public class TheWorld extends World {
         addObject(inventory, 100, 40);
         addObject(timer, Const.WIDTH / 2, 20);
 
-//        hero.addWeapon(new WiFi(hero));
-//        hero.addWeapon(new RJ45(hero));
+        RJ45 rj45 = new RJ45(hero);
+        rj45.upgrade();
+        rj45.upgrade();
+        rj45.upgrade();
+        rj45.upgrade();
+        rj45.upgrade();
+        hero.addWeapon(new WiFi(hero));
+        hero.addWeapon(rj45);
         hero.addWeapon(new MidTower(hero));
-//        hero.addWeapon(new OpticFiber(hero));
-//        hero.addWeapon(new Disk(hero));
+        hero.addWeapon(new OpticFiber(hero));
+        hero.addWeapon(new Disk(hero));
 
         loadScreen();
         initWorld();
