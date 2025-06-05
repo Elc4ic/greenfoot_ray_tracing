@@ -20,6 +20,6 @@ public final class Const {
     public static final int TICK_RATE = 20;
     public static final long WIN_TIME = 10 * 60 * 1000000000L;
 
-    public static final int ICON_SIZE = 64;
+    public static final int ICON_SIZE = 32;
 
 }

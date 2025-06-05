@@ -2,8 +2,8 @@ import java.io.IOException;
 
 /// WIFI - бьет по круговой площади
 public class WiFi extends Weapon {
-    private float radius = 10f;
-    private float damage = 20f;
+    private float radius = 8f;
+    private float damage = 16f;
     private float repulsion = 1.5f;
     private long fireInterval = Const.SECOND;
     Satellite field;
@@ -11,8 +11,8 @@ public class WiFi extends Weapon {
     public WiFi(Hero hero) throws IOException {
         super(hero, "images\\wifi.png", "models\\circle.obj");
         float[] pos = Vector3.add(getHero().getPos(), new float[]{0, 0.5f, 0});
-        field = new Satellite(pos, radius, (int) damage, getProjectileModel(),TextureCollection.getInstance().getIndex("wifi_texture"));
-        field.setMovementFunction(() -> {});
+        field = new Satellite(getHero(), pos, new float[]{0, 0, 0}, radius, (int) damage, getProjectileModel(), TextureCollection.getInstance().getIndex("wifi_texture"));
+        field.setMovementFunction((a, b,c) -> a);
         WorldBase.getInstance().addObject(field);
     }
 
@@ -35,7 +35,7 @@ public class WiFi extends Weapon {
     @Override
     public void upgrade() {
         lvlUp();
-        radius *= 1.1f;
+        radius *= 1.2f;
         damage *= 1.3f;
     }
 }

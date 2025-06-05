@@ -6,7 +6,6 @@ public class Laser extends Flash {
         super(pos, rot, scale, damage, 3, "models\\laser.obj", TextureCollection.getInstance().getIndex("enemy"));
     }
 
-    /// чет углы неправильно считает
     @Override
     public boolean haveCollision(float[] pos, float r) {
         float[] hypotenuse = Vector3.minus(pos, getPos());

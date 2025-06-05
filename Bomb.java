@@ -6,7 +6,7 @@ public class Bomb extends Projectile {
     private float explodeRadius;
 
     public Bomb(float[] pos, float scale, int damage, float radius, String model, int textureIndex) throws IOException {
-        super(pos,new float[]{0,0,0}, scale, model, textureIndex);
+        super(pos, new float[]{0, 0, 0}, scale, model, textureIndex);
         this.damage = damage;
         this.explodeRadius = radius;
         setOnGround(false);
@@ -26,12 +26,17 @@ public class Bomb extends Projectile {
 
     @Override
     public void destroy(WorldBase worldBase) {
-        for (WorldObject o : worldBase.getObjects()) {
-            if (o instanceof Enemy enemy && o.getDistance(getPos()) <= explodeRadius) {
-                enemy.applyDamage(-damage);
-                enemy.addToPos(new float[]{0, explodeRadius, 0});
-            }
+        try {
+            Flash explode = new Flash(
+                    getPos(), explodeRadius, damage,
+                    "models\\explode.obj",
+                    TextureCollection.getInstance().getIndex("explode")
+            );
+            worldBase.addObject(explode);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
         }
+
         worldBase.deleteObject(this);
     }
 }

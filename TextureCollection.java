@@ -38,14 +38,40 @@ public class TextureCollection {
     public static final int TXT_W = 1;
     public static final int TXT_H = 2;
 
-    private TextureCollection() {
+    private TextureCollection() throws IOException {
         textures = new ArrayList<>();
         nameToIndexMap = new HashMap<>();
+
+        Texture mapTexture = new Texture("images\\map.png", "map");
+        Texture bTexture = new Texture("images\\badan.png", "albedo");
+        Texture orbTexture = new Texture("images\\orb.png", "orb");
+        Texture bulletTexture = new Texture("images\\bullet.png", "bullet");
+        Texture enemyTexture = new Texture("images\\enemy.png", "enemy");
+        Texture wallTexture = new Texture("images\\wall.png", "wall");
+        Texture portalTexture = new Texture("images\\portal.png", "portal");
+        Texture wtTexture = new Texture("images\\wifi_texture.png", "wifi_texture");
+        Texture dTexture = new Texture("images\\disk_texture.png", "disk_texture");
+        Texture expTexture = new Texture("images\\explode_texture.png", "explode");
+
+        addTexture(mapTexture);
+        addTexture(bTexture);
+        addTexture(orbTexture);
+        addTexture(bulletTexture);
+        addTexture(enemyTexture);
+        addTexture(wallTexture);
+        addTexture(portalTexture);
+        addTexture(wtTexture);
+        addTexture(dTexture);
+        addTexture(expTexture);
     }
 
     public static synchronized TextureCollection getInstance() {
         if (instance == null) {
-            instance = new TextureCollection();
+            try {
+                instance = new TextureCollection();
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
         }
         return instance;
     }

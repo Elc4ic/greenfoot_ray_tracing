@@ -1,9 +1,9 @@
 import java.io.IOException;
 
 public class OpticFiber extends Weapon {
-    private float damage = 30f;
-    private int projectileCount = 6;
-    private long fireInterval = 1 * Const.SECOND;
+    private float damage = 20f;
+    private int projectileCount = 1;
+    private long fireInterval = 2 * Const.SECOND;
 
     public OpticFiber(Hero hero) {
         super(hero, "images\\opticFiber.png", "models\\laser.obj");
@@ -29,6 +29,9 @@ public class OpticFiber extends Weapon {
 
     @Override
     public void upgrade() {
-
+        lvlUp();
+        projectileCount++;
+        damage *= 1.2f;
+        fireInterval -= 100 * Const.MILLI;
     }
 }

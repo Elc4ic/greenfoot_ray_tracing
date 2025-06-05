@@ -4,15 +4,19 @@ import java.io.IOException;
 public class Satellite extends Projectile {
     private int damage;
     private MovementFunction movementFunction;
+    private Hero hero;
+    private float[] rotSpeed = new float[]{0, 0, 0};
 
-    public Satellite(float[] pos, float scale, int damage,String model, int textureIndex) throws IOException {
-        super(pos,new float[]{0,0,0}, scale, model,textureIndex);
+    public Satellite(Hero hero, float[] pos, float[] rot, float scale, int damage, String model, int textureIndex) throws IOException {
+        super(pos, rot, scale, model, textureIndex);
+        this.hero = hero;
         this.damage = damage;
     }
 
     @Override
     public boolean update() {
-        movementFunction.move();
+        setPos(movementFunction.move(hero.getPos(), getPos(), getRotation()));
+        addToRotation(rotSpeed);
         return false;
     }
 
@@ -30,9 +34,12 @@ public class Satellite extends Projectile {
         this.movementFunction = movementFunction;
     }
 
+    public void setRotSpeed(float[] rotSpeed) {
+        this.rotSpeed = rotSpeed;
+    }
 }
 
 @FunctionalInterface
 interface MovementFunction {
-    void move();
+    float[] move(float[] heroPos, float[] pos, float[] rot);
 }

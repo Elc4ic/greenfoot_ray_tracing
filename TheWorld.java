@@ -36,37 +36,22 @@ public class TheWorld extends World {
     public TheWorld() throws IOException {
         super(Const.WIDTH, Const.HEIGHT, 1);
 
-        Texture mapTexture = new Texture("images\\map.png", "map");
-        Texture bTexture = new Texture("images\\badan.png", "albedo");
-        Texture orbTexture = new Texture("images\\orb.png", "orb");
-        Texture bulletTexture = new Texture("images\\bullet.png", "bullet");
-        Texture enemyTexture = new Texture("images\\enemy.png", "enemy");
-        Texture wallTexture = new Texture("images\\wall.png", "wall");
-        Texture portalTexture = new Texture("images\\portal.png", "portal");
-        Texture wtTexture = new Texture("images\\wifi_texture.png", "wifi_texture");
-
-        textureCollection.addTexture(mapTexture);
-        textureCollection.addTexture(bTexture);
-        textureCollection.addTexture(orbTexture);
-        textureCollection.addTexture(bulletTexture);
-        textureCollection.addTexture(enemyTexture);
-        textureCollection.addTexture(wallTexture);
-        textureCollection.addTexture(portalTexture);
-        textureCollection.addTexture(wtTexture);
-
         texture = textureCollection.initTextureBuff();
 
         worldBase = WorldBase.initInstance(hero);
         addObject(interface1, interface1.getImg().getWidth() / 2, Const.HEIGHT - interface1.getImg().getHeight() / 2);
-        addObject(inventory, 40, 40);
+        addObject(inventory, 100, 40);
         addObject(timer, Const.WIDTH / 2, 20);
 
 //        hero.addWeapon(new WiFi(hero));
 //        hero.addWeapon(new RJ45(hero));
-//        hero.addWeapon(new MidTower(hero));
-        hero.addWeapon(new OpticFiber(hero));
+        hero.addWeapon(new MidTower(hero));
+//        hero.addWeapon(new OpticFiber(hero));
+//        hero.addWeapon(new Disk(hero));
+
         loadScreen();
         initWorld();
+        prepare();
     }
 
     void initWorld() {
@@ -203,6 +188,12 @@ public class TheWorld extends World {
         setBackground(img);
     }
 
+    /**
+     * Prepare the world for the start of the program.
+     * That is: create the initial objects and add them to the world.
+     */
+    private void prepare() {
+    }
 }
 
 

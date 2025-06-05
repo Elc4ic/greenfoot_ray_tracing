@@ -4,11 +4,11 @@ import java.util.List;
 /// интернет кабель RJ45 - стреляет в ближайшего врага пакетами данных
 public class RJ45 extends Weapon {
     private float damage = 12f;
-    private int projectileCount = 1;
+    private int projectileCount = 3;
+    private int projectileFired = 0;
     private int penetrations = 1;
 
     private long fireInterval = 2 * Const.SECOND;
-    private long interval = 400 * Const.MILLI;
 
     public RJ45(Hero hero) {
         super(hero, "images\\rj45.png", "models\\orb.obj");
@@ -19,22 +19,27 @@ public class RJ45 extends Weapon {
         if (System.nanoTime() - getLastFireTime() < fireInterval) return;
 
         WorldBase world = WorldBase.getInstance();
-        for (int i = 0; i < projectileCount; i++) {
-            try {
-                Enemy enemy = getNearestEnemy(world.getObjects());
-                if (enemy == null) return;
-                float[] n = getHero().getNormal(enemy.getPos());
-                Missile pc = new Missile(
-                        getHero().getPos(), n, getProjectileModel(), 1f, 1f,
-                        (int) damage, 90f, penetrations,
-                        TextureCollection.getInstance().getIndex("bullet")
-                );
-                world.addObject(pc);
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
 
+        try {
+            Enemy enemy = getNearestEnemy(world.getObjects());
+            if (enemy == null) return;
+            float[] n = getHero().getNormal(enemy.getPos());
+            Missile pc = new Missile(
+                    getHero().getPos(), n, getProjectileModel(), 1f, 1f,
+                    (int) damage, 90f, penetrations,
+                    TextureCollection.getInstance().getIndex("bullet")
+            );
+            world.addObject(pc);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
         }
+
+        if (projectileFired < projectileCount) {
+            projectileFired++;
+            return;
+        }
+
+        projectileFired = 0;
         setLastFireTime(System.nanoTime());
     }
 

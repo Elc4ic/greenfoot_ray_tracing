@@ -4,9 +4,9 @@ import java.util.Random;
 /// Оружие Корпус Mid-Tower - спавнит снаряды, которые падают и взрываются
 public class MidTower extends Weapon {
     private float damage = 70f;
-    private float radius = 3f;
-    private float xOffset = 9f;
-    private float zOffset = 9f;
+    private float radius = 0.5f;
+    private float xOffset = 12f;
+    private float zOffset = 12f;
     private int projectileCount = 3;
     private long fireInterval = 3 * Const.SECOND;
 
