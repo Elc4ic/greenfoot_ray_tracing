@@ -14,7 +14,6 @@ public class TheWorld extends World {
 
     private final Camera camera = new Camera(90);
     private final Hero hero = new Hero(new float[]{0, 0, 0}, new float[]{0, 0, 0}, 0.5f, 2);
-    private final TextureCollection textureCollection = TextureCollection.getInstance();
     private WorldBase worldBase;
     private Random rand = new Random();
 
@@ -27,7 +26,8 @@ public class TheWorld extends World {
             new WiFi(hero),
             new MidTower(hero),
             new OpticFiber(hero),
-            new Disk(hero)
+            new Disk(hero),
+            new KeyBoard(hero)
     };
     private final ChoisePlate cp1 = new ChoisePlate(hero);
     private final ChoisePlate cp2 = new ChoisePlate(hero);
@@ -36,22 +36,15 @@ public class TheWorld extends World {
 
 
     GreenfootImage frame = new GreenfootImage(Const.WIDTH, Const.HEIGHT);
-    Kernel rasterizer;
 
     private final List<Triangle> trianglesList = new ArrayList<>();
     private final List<Triangle> tfc_trianglesList = new ArrayList<>();
-
-    private float[] triangles;
-    private int[] texture;
-    private int[] textureSizes;
 
     private final float[] depth_buffer = new float[Const.PICXELS];
     private final int[] output = new int[Const.HEIGHT * Const.WIDTH];
 
     public TheWorld() throws IOException {
         super(Const.WIDTH, Const.HEIGHT, 1);
-
-        texture = textureCollection.initTextureBuff();
 
         worldBase = WorldBase.initInstance(hero);
         addObject(interface1, interface1.getImg().getWidth() / 2, Const.HEIGHT - interface1.getImg().getHeight() / 2);
@@ -124,57 +117,23 @@ public class TheWorld extends World {
     }
 
     private void render() {
-        tfc_trianglesList.clear();
-
-        trianglesList.forEach(
-                t -> tfc_trianglesList.addAll(t.transform(worldBase.getObjects()).flat(camera).clip())
-        );
-
-        initTriangles(tfc_trianglesList);
-
         IntStream.range(0, Const.PICXELS).forEach(i -> {
             depth_buffer[i] = Float.MAX_VALUE;
             output[i] = 0xffffffff;
         });
-
-        Range range = Range.create(triangles.length / Triangle.SIZE);
-
-        rasterizer = new RasterizerKernel(
-                triangles,
-                textureSizes, texture,
-                output, depth_buffer,
-                Const.WIDTH, Const.HEIGHT
+        tfc_trianglesList.clear();
+        trianglesList.forEach(
+                t -> tfc_trianglesList.addAll(t.transform(worldBase.getObjects()).flat(camera).clip())
         );
+        tfc_trianglesList.forEach(t -> t.rasterize(depth_buffer, output));
 
-        rasterizer.setExecutionModeWithoutFallback(Kernel.EXECUTION_MODE.JTP);
-        rasterizer.setExplicit(true);
-
-        rasterizer.put(triangles);
-        rasterizer.put(camera.getPos());
-        rasterizer.put(camera.getRotations());
-        rasterizer.put(textureSizes);
-        rasterizer.put(texture);
-        rasterizer.put(depth_buffer);
-
-        rasterizer.execute(range);
-        rasterizer.get(output);
         for (int y = 0; y < Const.HEIGHT; y++) {
             for (int x = 0; x < Const.WIDTH; x++) {
                 frame.setColorAt(x, y, ColorOperation.IntToGColor(output[y * Const.WIDTH + x]));
             }
         }
 
-        rasterizer.dispose();
-
         setBackground(frame);
-    }
-
-    private void initTriangles(List<Triangle> trianglesList) {
-        textureSizes = textureCollection.getTextureSizes(trianglesList);
-        triangles = new float[trianglesList.size() * Triangle.SIZE];
-        for (int i = 0; i < trianglesList.size(); i++) {
-            System.arraycopy(trianglesList.get(i).toFloatArray(), 0, triangles, i * Triangle.SIZE, Triangle.SIZE);
-        }
     }
 
     void lose() {

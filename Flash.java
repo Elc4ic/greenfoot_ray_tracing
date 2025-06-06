@@ -5,14 +5,14 @@ public class Flash extends Projectile {
     private long framesToLive = 3;
     private long framesAlive = 0;
 
-    public Flash(float[] pos,float[] rot, float scale, int damage, long framesToLive, String model, int textureIndex) throws IOException {
-        super(pos,rot, scale, model, textureIndex);
+    public Flash(float[] pos, float[] rot, float scale, int damage, long framesToLive, String model, int textureIndex) throws IOException {
+        super(pos, rot, scale, model, textureIndex);
         this.damage = damage;
         this.framesToLive = framesToLive;
     }
 
     public Flash(float[] pos, float scale, int damage, String model, int textureIndex) throws IOException {
-        super(pos,new float[]{0,0,0}, scale, model, textureIndex);
+        super(pos, new float[]{0, 0, 0}, scale, model, textureIndex);
         this.damage = damage;
     }
 

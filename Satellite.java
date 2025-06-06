@@ -34,8 +34,20 @@ public class Satellite extends Projectile {
         this.movementFunction = movementFunction;
     }
 
+    public float[] doMovementFunction(float[] heroPos, float[] pos, float[] rotSpeed) {
+        return movementFunction.move(heroPos, pos, rotSpeed);
+    }
+
     public void setRotSpeed(float[] rotSpeed) {
         this.rotSpeed = rotSpeed;
+    }
+
+    public float[] getRotSpeed() {
+        return rotSpeed;
+    }
+
+    public float[] getHeroPos() {
+        return hero.getPos();
     }
 }
 

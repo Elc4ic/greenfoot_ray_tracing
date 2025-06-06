@@ -53,6 +53,7 @@ public class TextureCollection {
         Texture dTexture = new Texture("images\\disk_texture.png", "disk_texture");
         Texture expTexture = new Texture("images\\explode_texture.png", "explode");
         Texture xpTexture = new Texture("images\\exp_texture.png", "experience");
+        Texture kbTexture = new Texture("images\\key_sword_texture.png", "keyboard");
 
         addTexture(mapTexture);
         addTexture(bTexture);
@@ -65,6 +66,7 @@ public class TextureCollection {
         addTexture(dTexture);
         addTexture(expTexture);
         addTexture(xpTexture);
+        addTexture(kbTexture);
     }
 
     public static synchronized TextureCollection getInstance() {

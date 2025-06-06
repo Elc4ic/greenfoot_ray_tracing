@@ -28,8 +28,8 @@ public class Camera {
         float[] dir = hero.getDirection();
         float[] heroHorizontalOffset = Vector3.add(hero.getPos(), Vector3.scale(dir, -5));
         float[] cameraRotation = hero.getRotation();
-        this.pos = Vector3.add(heroHorizontalOffset, new float[]{0, 5, 0});
-        this.rotations = Vector3.add(cameraRotation,new float[]{(float) Math.toRadians(-45),0,0});
+        this.pos = Vector3.add(heroHorizontalOffset, new float[]{0, 6, 0});
+        this.rotations = Vector3.add(cameraRotation,new float[]{(float) Math.toRadians(-50),0,0});
     }
 
     public float sinX() {

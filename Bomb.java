@@ -32,6 +32,7 @@ public class Bomb extends Projectile {
                     "models\\explode.obj",
                     TextureCollection.getInstance().getIndex("explode")
             );
+            explode.setCollisionR(explodeRadius);
             worldBase.addObject(explode);
         } catch (IOException e) {
             throw new RuntimeException(e);

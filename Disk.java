@@ -3,8 +3,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class Disk extends Weapon {
-    private float damage = 6f;
-    private int projectileCount = 1;
+    private float damage = 14f;
+    private int projectileCount = 2;
     private List<Satellite> disks = new ArrayList<>();
 
     public Disk(Hero hero) {
@@ -15,7 +15,7 @@ public class Disk extends Weapon {
     public void fire() {
         if (disks.size() < projectileCount) {
             for (Satellite disk : disks) {
-                destroyDisk(disk);
+                WorldBase.getInstance().deleteObject(disk);
             }
             disks.clear();
             try {
@@ -53,8 +53,4 @@ public class Disk extends Weapon {
         WorldBase.getInstance().addObject(disk);
     }
 
-    private void destroyDisk(Satellite disk) {
-        WorldBase.getInstance().deleteObject(disk);
-        disks.remove(disk);
-    }
 }
