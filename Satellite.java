@@ -6,6 +6,9 @@ public class Satellite extends Projectile {
     private MovementFunction movementFunction;
     private Hero hero;
     private float[] rotSpeed = new float[]{0, 0, 0};
+    private long framesToLive = 4;
+    private long framesAlive = 0;
+    private boolean permanent = true;
 
     public Satellite(Hero hero, float[] pos, float[] rot, float scale, int damage, String model, int textureIndex) throws IOException {
         super(pos, rot, scale, model, textureIndex);
@@ -15,9 +18,10 @@ public class Satellite extends Projectile {
 
     @Override
     public boolean update() {
-        setPos(movementFunction.move(hero.getPos(), getPos(), getRotation()));
+        if (!permanent) framesAlive++;
+        setPos(movementFunction.move(hero, getPos(), getRotation()));
         addToRotation(rotSpeed);
-        return false;
+        return framesAlive >= framesToLive;
     }
 
     @Override
@@ -34,8 +38,9 @@ public class Satellite extends Projectile {
         this.movementFunction = movementFunction;
     }
 
-    public float[] doMovementFunction(float[] heroPos, float[] pos, float[] rotSpeed) {
-        return movementFunction.move(heroPos, pos, rotSpeed);
+    public void setTimeToLive(long framesToLive) {
+        this.framesToLive = framesToLive;
+        permanent = false;
     }
 
     public void setRotSpeed(float[] rotSpeed) {
@@ -53,5 +58,5 @@ public class Satellite extends Projectile {
 
 @FunctionalInterface
 interface MovementFunction {
-    float[] move(float[] heroPos, float[] pos, float[] rot);
+    float[] move(Hero hero, float[] pos, float[] rot);
 }

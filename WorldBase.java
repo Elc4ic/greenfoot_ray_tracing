@@ -21,6 +21,19 @@ public class WorldBase {
                         TextureCollection.getInstance().getIndex("map")
                 )
         );
+
+        loadScreen.setColor(Color.BLACK);
+        loadScreen.fill();
+        GreenfootImage img2 = new GreenfootImage(
+                "SILICONE HELL\n aim: keep alive",
+                50,
+                Color.WHITE,
+                Color.BLACK);
+        loadScreen.drawImage(
+                img2,
+                loadScreen.getWidth() / 2 - img2.getWidth() / 2,
+                loadScreen.getHeight() / 2 - img2.getHeight() / 2
+        );
     }
 
     public static synchronized WorldBase getInstance() {
@@ -41,6 +54,9 @@ public class WorldBase {
     private int enemyCounter = 0;
     private Random r = new Random();
     public boolean needUpdateBuffers = false;
+
+    public boolean needLoadScreen = false;
+    GreenfootImage loadScreen = new GreenfootImage(Const.WIDTH, Const.HEIGHT);
 
     public void update() throws IOException {
         for (WorldObject o : objects) {
@@ -86,20 +102,16 @@ public class WorldBase {
         objectsOnAdd.add(o);
     }
 
+    public int getEnemyCounter() {
+        return enemyCounter;
+    }
+
     public GreenfootImage getLoadScreen() {
-        GreenfootImage img = new GreenfootImage(Const.WIDTH, Const.HEIGHT);
-        img.setColor(Color.BLACK);
-        img.fill();
-        GreenfootImage img2 = new GreenfootImage(
-                "SILICONE HELL\n aim: keep alive",
-                50,
-                Color.WHITE,
-                Color.BLACK);
-        img.drawImage(
-                img2,
-                img.getWidth() / 2 - img2.getWidth() / 2,
-                img.getHeight() / 2 - img2.getHeight() / 2);
-        return img;
+        return loadScreen;
+    }
+
+    public void setLoadScreen(GreenfootImage loadScreen) {
+        this.loadScreen = loadScreen;
     }
 
     ArrayList<WorldObject> getObjects() {

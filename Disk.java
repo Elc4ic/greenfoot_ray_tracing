@@ -47,7 +47,7 @@ public class Disk extends Weapon {
         disk.setMovementFunction((a, b, c) -> {
             float[] unit = new float[]{0, 0, 3};
             Vector3.rotateYr(unit, c[1]);
-            return Vector3.add(a, unit);
+            return Vector3.add(a.getPos(), unit);
         });
         disks.add(disk);
         WorldBase.getInstance().addObject(disk);

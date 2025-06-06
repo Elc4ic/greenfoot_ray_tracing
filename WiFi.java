@@ -22,7 +22,7 @@ public class WiFi extends Weapon {
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
-            field.setMovementFunction((a, b,c) -> a);
+            field.setMovementFunction((a, b,c) -> a.getPos());
             WorldBase.getInstance().addObject(field);
         }
 

@@ -22,12 +22,15 @@ public class TheWorld extends World {
     private final Interface interface1 = new Interface(hero, fPSCounter);
     private final Inventory inventory = new Inventory(hero);
     private final Weapon[] weaponsPool = {
-            new RJ45(hero),
-            new WiFi(hero),
-            new MidTower(hero),
-            new OpticFiber(hero),
-            new Disk(hero),
-            new KeyBoard(hero)
+//            new RJ45(hero),
+//            new WiFi(hero),
+//            new MidTower(hero),
+//            new OpticFiber(hero),
+//            new Disk(hero),
+//            new KeyBoard(hero),
+            new PaperPen(hero)
+  //          new Scooter(hero),
+ //           new Virus(hero)
     };
     private final ChoisePlate cp1 = new ChoisePlate(hero);
     private final ChoisePlate cp2 = new ChoisePlate(hero);
@@ -57,18 +60,13 @@ public class TheWorld extends World {
 
         hero.addWeapon(weaponsPool[rand.nextInt(weaponsPool.length)]);
 
-        loadScreen();
+        setBackground(worldBase.getLoadScreen());
         initWorld();
-        prepare();
     }
 
     void initWorld() {
         initTrianglesFromObjects(worldBase.getObjects());
         System.gc();
-    }
-
-    public void loadScreen() {
-        setBackground(worldBase.getLoadScreen());
     }
 
     public void act() {
@@ -87,18 +85,24 @@ public class TheWorld extends World {
             if (worldBase.needUpdateBuffers) {
                 initWorld();
             }
-            render();
+            if (worldBase.needLoadScreen) {
+                setBackground(worldBase.getLoadScreen());
+                Greenfoot.delay(400);
+                worldBase.needLoadScreen = false;
+            } else {
+                render();
 
-            if (timer.update()) {
-                try {
-                    worldBase.update();
-                } catch (IOException e) {
-                    throw new RuntimeException(e);
+                if (timer.update()) {
+                    try {
+                        worldBase.update();
+                    } catch (IOException e) {
+                        throw new RuntimeException(e);
+                    }
+                    hero.updateHero();
+                    camera.bindToHero(hero);
+                    interface1.update();
+                    inventory.update();
                 }
-                hero.updateHero();
-                camera.bindToHero(hero);
-                interface1.update();
-                inventory.update();
             }
         }
         fPSCounter.update();
@@ -168,12 +172,6 @@ public class TheWorld extends World {
         setBackground(img);
     }
 
-    /**
-     * Prepare the world for the start of the program.
-     * That is: create the initial objects and add them to the world.
-     */
-    private void prepare() {
-    }
 }
 
 

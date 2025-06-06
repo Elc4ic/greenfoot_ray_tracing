@@ -18,27 +18,26 @@ public class KeyBoard extends Weapon {
     public void fire() {
         if (System.nanoTime() - getLastFireTime() < fireInterval) return;
 
-        if (System.nanoTime() - getLastFireTime() < fireInterval) return;
-
         WorldBase world = WorldBase.getInstance();
 
         try {
             float[] posL = Vector3.add(getHero().getPos(), new float[]{0, 0.3f, 0});
             Sword sword = new Sword(getHero(), posL, new float[]{0, dy * wingNow, 0}, 0.1f, (int) damage);
             sword.setRotSpeed(new float[]{0, 12, 0});
-            sword.setMovementFunction((a, b, c) -> a);
+            sword.setMovementFunction((a, b, c) -> a.getPos());
             world.addObject(sword);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
 
-        if (wingNow >= wingCount) wingNow = 0;
-        else wingNow++;
+        if (wingNow < wingCount-1) wingNow++;
+        else wingNow = 0;
         setLastFireTime(System.nanoTime());
     }
 
     @Override
     public void upgrade() {
+        lvlUp();
         damage *= 1.2f;
         wingCount++;
         initData();
