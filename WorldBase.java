@@ -3,6 +3,7 @@ import greenfoot.GreenfootImage;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Random;
 import java.util.Stack;
 
@@ -21,6 +22,12 @@ public class WorldBase {
                         TextureCollection.getInstance().getIndex("map")
                 )
         );
+
+        enemiesModel.add("models\\enemy1.obj");
+        enemiesModel.add("models\\enemy2.obj");
+        enemiesModel.add("models\\enemy3.obj");
+        enemiesModel.add("models\\enemy4.obj");
+        enemiesModel.add("models\\enemy5.obj");
 
         loadScreen.setColor(Color.BLACK);
         loadScreen.fill();
@@ -50,10 +57,12 @@ public class WorldBase {
     private final ArrayList<WorldObject> objects = new ArrayList<>();
     private final Stack<WorldObject> objectsOnDestroy = new Stack<>();
     private final Stack<WorldObject> objectsOnAdd = new Stack<>();
-    private final int maxEnemy = 10;
+    private final int maxMaxEnemy = 300;
+    private int maxEnemy = 2;
     private int enemyCounter = 0;
     private Random r = new Random();
     public boolean needUpdateBuffers = false;
+    List<String> enemiesModel = new ArrayList<>();
 
     public boolean needLoadScreen = false;
     GreenfootImage loadScreen = new GreenfootImage(Const.WIDTH, Const.HEIGHT);
@@ -80,18 +89,26 @@ public class WorldBase {
     public void addEnemy() throws IOException {
         if (enemyCounter >= maxEnemy) return;
         needUpdateBuffers = true;
+        float enemyFactor = r.nextFloat();
+        String enemyModel = enemiesModel.get(r.nextInt(enemiesModel.size()));
         objectsOnAdd.add(new Enemy(
-                new float[]{hero.getPos()[0] + r.nextInt(60) - 30, 0, hero.getPos()[2] + r.nextInt(60) - 30},
-                new float[]{0, 0, 0},
-                1f,
-                hero,
-                TextureCollection.getInstance().getIndex("enemy"))
+                        new float[]{hero.getPos()[0] + r.nextInt(60) - 30, 0, hero.getPos()[2] + r.nextInt(60) - 30},
+                        new float[]{0, 0, 0},
+                        2f * enemyFactor,
+                        hero,
+                        enemyModel,
+                        TextureCollection.getInstance().getIndex("enemy"),
+                        (int) ((120 + 2 * maxEnemy) * enemyFactor)
+                )
         );
         enemyCounter++;
     }
 
     public void deleteObject(WorldObject o) {
-        if (o instanceof Enemy) enemyCounter--;
+        if (o instanceof Enemy) {
+            enemyCounter--;
+            maxEnemy++;
+        }
         needUpdateBuffers = true;
         objectsOnDestroy.add(o);
     }

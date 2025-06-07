@@ -22,15 +22,15 @@ public class TheWorld extends World {
     private final Interface interface1 = new Interface(hero, fPSCounter);
     private final Inventory inventory = new Inventory(hero);
     private final Weapon[] weaponsPool = {
-//            new RJ45(hero),
-//            new WiFi(hero),
-//            new MidTower(hero),
-//            new OpticFiber(hero),
-//            new Disk(hero),
-//            new KeyBoard(hero),
-            new PaperPen(hero)
-  //          new Scooter(hero),
- //           new Virus(hero)
+            new RJ45(hero),
+            new WiFi(hero),
+            new MidTower(hero),
+            new OpticFiber(hero),
+            new Disk(hero),
+            new KeyBoard(hero),
+            new PaperPen(hero),
+            new Scooter(hero),
+            new Virus(hero)
     };
     private final ChoisePlate cp1 = new ChoisePlate(hero);
     private final ChoisePlate cp2 = new ChoisePlate(hero);

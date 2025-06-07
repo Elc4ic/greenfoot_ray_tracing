@@ -9,7 +9,8 @@ public class Creature extends ObjFile {
     static final int STATE_UPGRADE = 4;
 
     private int health = 100;
-    private final int healthMax = 100;
+    private int healthMax = 100;
+
     private int state = STATE_ALIVE;
     private int step = 1;
     private float speedX = 0;
@@ -21,6 +22,12 @@ public class Creature extends ObjFile {
 
     public Creature(float[] pos, float[] rot, float scale, String objFile, int textureIndex) throws IOException {
         super(pos, rot, scale, objFile, textureIndex);
+    }
+
+    public Creature(float[] pos, float[] rot, float scale, String objFile, int textureIndex, int health) throws IOException {
+        super(pos, rot, scale, objFile, textureIndex);
+        this.healthMax = health;
+        this.health = health;
     }
 
     public boolean update() {

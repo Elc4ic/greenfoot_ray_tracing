@@ -7,8 +7,8 @@ public class Enemy extends Creature {
     int damage = 4;
     Hero hero;
 
-    public Enemy(float[] pos, float[] rot, float scale, Hero hero, int textureIndex) throws IOException {
-        super(pos, rot, scale, "models\\block.obj", textureIndex);
+    public Enemy(float[] pos, float[] rot, float scale, Hero hero,String model, int textureIndex,int health) throws IOException {
+        super(pos, rot, scale, model, textureIndex,health);
         this.hero = hero;
         setCollisionR(scale);
     }
