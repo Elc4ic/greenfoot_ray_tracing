@@ -100,7 +100,6 @@ public class Hero extends Creature {
     public float getAsMult() {
         return asMult;
     }
-
     public void incAS(float val){
         asMult -= val;
     }

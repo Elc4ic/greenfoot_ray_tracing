@@ -7,9 +7,10 @@ public class Enemy extends Creature {
     int damage = 4;
     Hero hero;
 
-    public Enemy(float[] pos, float[] rot, float scale, Hero hero, int textureIndex) throws IOException {
-        super(pos, rot, scale, "models\\block.obj", textureIndex);
+    public Enemy(float[] pos, float[] rot, float scale, Hero hero,String model, int textureIndex,int health) throws IOException {
+        super(pos, rot, scale, model, textureIndex,health);
         this.hero = hero;
+        setCollisionR(scale);
     }
 
     @Override
@@ -17,7 +18,7 @@ public class Enemy extends Creature {
         attackByRange();
         moveToHero();
         super.update();
-        return state == STATE_DEAD;
+        return getState() == STATE_DEAD;
     }
 
     void moveToHero() {
@@ -29,6 +30,16 @@ public class Enemy extends Creature {
         if (hero.getDistance(getPos()) < attackRadius) {
             hero.applyDamage(-damage);
         }
+    }
+
+    void destroy(WorldBase worldBase) {
+        try {
+            Experience exp = new Experience(getPos(), 1);
+            worldBase.addObject(exp);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+        worldBase.deleteObject(this);
     }
 
 }

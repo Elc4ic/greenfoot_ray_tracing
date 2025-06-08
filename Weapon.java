@@ -74,7 +74,6 @@ public abstract class Weapon {
     protected float getDMG(float base){
         return base * hero.getDmgMult();
     }
-
     protected float getAS(float base){
         return base * hero.getAsMult();
     }
