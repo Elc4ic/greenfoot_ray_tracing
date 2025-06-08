@@ -7,12 +7,12 @@ public class PaperPen extends Weapon {
     private Random rand = new Random();
 
     public PaperPen(Hero hero) {
-        super(hero, "images\\paper.png", "models\\none.obj");
+        super(hero, "images\\paper.png", "models\\none.obj", "Paper Pen");
     }
 
     @Override
     public void fire() {
-        if (System.nanoTime() - getLastFireTime() < fireInterval) return;
+        if (System.nanoTime() - getLastFireTime() < getAS(fireInterval)) return;
 
         WorldBase worldBase = WorldBase.getInstance();
         List<WorldObject> objs = worldBase.getObjects();

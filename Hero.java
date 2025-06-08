@@ -9,6 +9,10 @@ public class Hero extends Creature {
     private long exp = 0;
     private long nextLvlXp = 2;
     private int lvl = 0;
+    private float dmgMult = 1.0f;
+    private float asMult = 1.0f;
+    private int bonusProj = 0;
+
 
     private List<Weapon> weapons = new ArrayList<>();
 
@@ -84,6 +88,27 @@ public class Hero extends Creature {
 
     public long getLvl() {
         return lvl;
+    }
+
+    public float getDmgMult() {
+        return dmgMult;
+    }
+    public void incDmg(float val){
+        dmgMult += val;
+    }
+
+    public float getAsMult() {
+        return asMult;
+    }
+    public void incAS(float val){
+        asMult -= val;
+    }
+
+    public int getBonusProj() {
+        return bonusProj;
+    }
+    public void incProj(int val){
+        bonusProj += val;
     }
 
     public void addExp(long experience) {

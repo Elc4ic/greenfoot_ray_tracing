@@ -11,14 +11,15 @@ public class MidTower extends Weapon {
     private long fireInterval = 3 * Const.SECOND;
 
     public MidTower(Hero hero) {
-        super(hero, "images\\midtower.png", "models\\block.obj");
+        super(hero, "images\\midtower.png", "models\\block.obj", "Mid-Tower");
     }
 
     @Override
     public void fire() {
-        if (System.nanoTime() - getLastFireTime() < fireInterval) return;
+        if (System.nanoTime() - getLastFireTime() < getAS(fireInterval)) return;
 
-        for (int i = 0; i < projectileCount; i++) {
+        int ModProjectileCount = getProj(projectileCount);
+        for (int i = 0; i < ModProjectileCount; i++) {
             float[] bombPos = new float[]{
                     getHero().getPos()[0] + getR().nextFloat() * xOffset - xOffset / 2,
                     12,
@@ -26,7 +27,7 @@ public class MidTower extends Weapon {
             };
             try {
                 Bomb pc = new Bomb(
-                        bombPos, 0.3f, (int) damage, radius,
+                        bombPos, 0.3f, (int) getDMG(damage), radius,
                         getProjectileModel(),
                         TextureCollection.getInstance().getIndex("portal")
                 );

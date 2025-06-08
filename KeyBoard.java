@@ -10,19 +10,19 @@ public class KeyBoard extends Weapon {
     private long fireInterval;
 
     public KeyBoard(Hero hero) {
-        super(hero, "images\\keyboard.png", "models\\key_sword.obj");
+        super(hero, "images\\keyboard.png", "models\\key_sword.obj", "Keyboard");
         initData();
     }
 
     @Override
     public void fire() {
-        if (System.nanoTime() - getLastFireTime() < fireInterval) return;
+        if (System.nanoTime() - getLastFireTime() < getAS(fireInterval)) return;
 
         WorldBase world = WorldBase.getInstance();
 
         try {
             float[] posL = Vector3.add(getHero().getPos(), new float[]{0, 0.3f, 0});
-            Sword sword = new Sword(getHero(), posL, new float[]{0, dy * wingNow, 0}, 0.1f, (int) damage);
+            Sword sword = new Sword(getHero(), posL, new float[]{0, dy * wingNow, 0}, 0.1f, (int) getDMG(damage));
             sword.setRotSpeed(new float[]{0, 12, 0});
             sword.setMovementFunction((a, b, c) -> a.getPos());
             world.addObject(sword);

@@ -1,0 +1,17 @@
+#BlueJ class context
+comment0.target=StartMenu
+comment1.params=
+comment1.target=StartMenu()
+comment2.params=button
+comment2.target=void\ addButton(Button)
+comment3.params=
+comment3.target=void\ removeAllButtons()
+comment4.params=
+comment4.target=void\ showMainMenu()
+comment5.params=
+comment5.target=void\ showManual()
+comment6.params=
+comment6.target=boolean\ isActive()
+comment7.params=
+comment7.target=void\ deactivate()
+numComments=8

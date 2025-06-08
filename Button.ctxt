@@ -1,0 +1,15 @@
+#BlueJ class context
+comment0.target=Button
+comment1.params=text\ width\ height\ onClick
+comment1.target=Button(java.lang.String,\ int,\ int,\ java.lang.Runnable)
+comment2.params=width\ height\ color
+comment2.target=void\ drawButton(int,\ int,\ greenfoot.Color)
+comment3.params=
+comment3.target=void\ act()
+comment4.params=visible
+comment4.target=void\ setVisible(boolean)
+comment5.params=
+comment5.target=void\ deleteButton()
+comment6.params=
+comment6.target=java.lang.String\ getText()
+numComments=7

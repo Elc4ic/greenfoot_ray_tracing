@@ -9,7 +9,7 @@ public class WiFi extends Weapon {
     Satellite field;
 
     public WiFi(Hero hero) {
-        super(hero, "images\\wifi.png", "models\\circle.obj");
+        super(hero, "images\\wifi.png", "models\\circle.obj", "WiFi");
     }
 
     @Override
@@ -32,7 +32,7 @@ public class WiFi extends Weapon {
         for (WorldObject o : WorldBase.getInstance().getObjects()) {
             if (o instanceof Enemy enemy && o.getDistance(getHero().getPos()) <= radius) {
                 if (o.haveCollision(field.getPos(), radius)) {
-                    enemy.applyDamage(-(int) damage);
+                    enemy.applyDamage(-(int) getDMG(damage));
                     enemy.addToPos(Vector3.scale(field.getNormal(enemy.getPos()), repulsion));
                 }
             }

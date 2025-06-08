@@ -8,19 +8,20 @@ public class Disk extends Weapon {
     private List<Satellite> disks = new ArrayList<>();
 
     public Disk(Hero hero) {
-        super(hero, "images\\disk.png", "models\\circle.obj");
+        super(hero, "images\\disk.png", "models\\circle.obj", "Disk");
     }
 
     @Override
     public void fire() {
-        if (disks.size() < projectileCount) {
+        int ModProjectileCount = getProj(projectileCount);
+        if (disks.size() < ModProjectileCount) {
             for (Satellite disk : disks) {
                 WorldBase.getInstance().deleteObject(disk);
             }
             disks.clear();
             try {
-                float delta = Const.PI * 2 / projectileCount;
-                for (int i = 0; i < projectileCount; i++) {
+                float delta = Const.PI * 2 / ModProjectileCount;
+                for (int i = 0; i < ModProjectileCount; i++) {
                     float dy = i * delta;
                     createDisk(dy);
                 }
@@ -39,7 +40,7 @@ public class Disk extends Weapon {
 
     private void createDisk(float dy) throws IOException {
         Satellite disk = new Satellite(
-                getHero(), getHero().getPos(), new float[]{0, dy, 0}, 1f, (int) damage,
+                getHero(), getHero().getPos(), new float[]{0, dy, 0}, 1f, (int) getDMG(damage),
                 getProjectileModel(),
                 TextureCollection.getInstance().getIndex("disk_texture")
         );

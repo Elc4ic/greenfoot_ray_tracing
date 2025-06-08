@@ -1,6 +1,6 @@
 import greenfoot.*;  // (World, Actor, GreenfootImage, Greenfoot and MouseInfo)
 
-import java.util.Random;
+import java.util.*;
 
 /// надо нагенерить ассеты меню и плитки для него или как там это делается
 public class ChoiseMenu extends Actor {
@@ -22,15 +22,22 @@ public class ChoiseMenu extends Actor {
 
     }
 
-    public void showMenu(Weapon[] weapons) {
+    public void showMenu(Weapon[] weapons, Hero hero) {
         if (showed) return;
+        menu.scale(400,230);
         setImage(menu);
-        int cp1 = rand.nextInt(weapons.length);
-        int cp2 = rand.nextInt(weapons.length);
-        int cp3 = rand.nextInt(weapons.length);
-        choisPlate1.setPlate(weapons[cp1]);
-        choisPlate2.setPlate(weapons[cp2]);
-        choisPlate3.setPlate(weapons[cp3]);
+
+        List<Object> upgrades = new ArrayList<>();
+        upgrades.addAll(Arrays.asList(weapons));
+
+        upgrades.add(new Passive("Damage+", () -> { hero.incDmg(0.2f);}));
+        upgrades.add(new Passive("AS+", () -> { hero.incAS(0.1f);}));
+        upgrades.add(new Passive("Proj+", () -> { hero.incProj(1);}));
+
+        Collections.shuffle(upgrades);
+        choisPlate1.setPlate(upgrades.get(0));
+        choisPlate2.setPlate(upgrades.get(1));
+        choisPlate3.setPlate(upgrades.get(2));
         showed = true;
     }
 

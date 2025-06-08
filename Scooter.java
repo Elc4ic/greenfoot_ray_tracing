@@ -6,16 +6,16 @@ public class Scooter extends Weapon {
     private float damage = 50f;
 
     public Scooter(Hero hero) {
-        super(hero, "images\\scooter.png", "models\\scooter.obj");
+        super(hero, "images\\scooter.png", "models\\scooter.obj", "Scooter");
     }
 
     @Override
     public void fire() {
-        if (System.nanoTime() - getLastFireTime() < fireInterval) return;
+        if (System.nanoTime() - getLastFireTime() < getAS(fireInterval)) return;
 
         WorldBase world = WorldBase.getInstance();
         try {
-            Satellite scooter = new Satellite(getHero(), getHero().getPos(), getHero().getRotation(), 0.08f, (int) damage, getProjectileModel(), TextureCollection.getInstance().getIndex("portal"));
+            Satellite scooter = new Satellite(getHero(), getHero().getPos(), getHero().getRotation(), 0.08f, (int) getDMG(damage), getProjectileModel(), TextureCollection.getInstance().getIndex("portal"));
             scooter.setMovementFunction((a, b, c) -> {
                 a.addToPos(Vector3.scale(a.getDirection(), speed));
                 return a.getPos();

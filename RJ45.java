@@ -11,12 +11,12 @@ public class RJ45 extends Weapon {
     private long fireInterval = 2 * Const.SECOND;
 
     public RJ45(Hero hero) {
-        super(hero, "images\\rj45.png", "models\\orb.obj");
+        super(hero, "images\\rj45.png", "models\\orb.obj", "RJ45");
     }
 
     @Override
     public void fire() {
-        if (System.nanoTime() - getLastFireTime() < fireInterval) return;
+        if (System.nanoTime() - getLastFireTime() < getAS(fireInterval)) return;
 
         WorldBase world = WorldBase.getInstance();
 
@@ -26,7 +26,7 @@ public class RJ45 extends Weapon {
             float[] n = getHero().getNormal(enemy.getPos());
             Missile pc = new Missile(
                     getHero().getPos(), n, getProjectileModel(), 1f, 1f,
-                    (int) damage, 90f, penetrations,
+                    (int) getDMG(damage), 90f, penetrations,
                     TextureCollection.getInstance().getIndex("bullet")
             );
             world.addObject(pc);
@@ -34,7 +34,8 @@ public class RJ45 extends Weapon {
             throw new RuntimeException(e);
         }
 
-        if (projectileFired < projectileCount) {
+        int ModProjectileCount = getProj(projectileCount);
+        if (projectileFired < ModProjectileCount) {
             projectileFired++;
         } else {
             projectileFired = 0;

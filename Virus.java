@@ -4,15 +4,14 @@ import greenfoot.GreenfootImage;
 public class Virus extends Weapon {
     private final GreenfootImage deathScreen = new GreenfootImage("images\\death_screen.png");
     private long fireInterval = 30 * Const.SECOND;
-
     public Virus(Hero hero) {
-        super(hero, "images\\virus.png", "models\\virus.obj");
+        super(hero, "images\\virus.png", "models\\virus.obj", "Virus");
     }
 
 
     @Override
     public void fire() {
-        if (System.nanoTime() - getLastFireTime() < fireInterval) return;
+        if (System.nanoTime() - getLastFireTime() < getAS(fireInterval)) return;
 
         WorldBase world = WorldBase.getInstance();
         world.setLoadScreen(deathScreen);

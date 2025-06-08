@@ -15,6 +15,7 @@ public class TheWorld extends World {
     private final Camera camera = new Camera(90);
     private final Hero hero = new Hero(new float[]{0, 0, 0}, new float[]{0, 0, 0}, 0.5f, 2);
     private WorldBase worldBase;
+    private StartMenu startMenu;
     private Random rand = new Random();
 
     private final Timer timer = new Timer(Const.TICK_RATE);
@@ -49,14 +50,18 @@ public class TheWorld extends World {
     public TheWorld() throws IOException {
         super(Const.WIDTH, Const.HEIGHT, 1);
 
+        startMenu = new StartMenu();
+        addObject(startMenu, Const.WIDTH / 2, Const.HEIGHT / 2);
+        startMenu.showMainMenu();
+
         worldBase = WorldBase.initInstance(hero);
         addObject(interface1, interface1.getImg().getWidth() / 2, Const.HEIGHT - interface1.getImg().getHeight() / 2);
         addObject(inventory, 100, 40);
         addObject(timer, Const.WIDTH / 2, 20);
         addObject(choiseMenu, Const.WIDTH / 2, Const.HEIGHT / 2);
         addObject(cp1, Const.WIDTH / 2, Const.HEIGHT / 2);
-        addObject(cp2, Const.WIDTH / 2 - 76, Const.HEIGHT / 2);
-        addObject(cp3, Const.WIDTH / 2 + 76, Const.HEIGHT / 2);
+        addObject(cp2, Const.WIDTH / 2 - 110, Const.HEIGHT / 2);
+        addObject(cp3, Const.WIDTH / 2 + 110, Const.HEIGHT / 2);
 
         hero.addWeapon(weaponsPool[rand.nextInt(weaponsPool.length)]);
 
@@ -70,12 +75,15 @@ public class TheWorld extends World {
     }
 
     public void act() {
+        if (startMenu != null && startMenu.isActive()) {
+            return;
+        }
         if (hero.getState() == Creature.STATE_DEAD) {
             lose();
         } else if (timer.getTime() >= Const.WIN_TIME) {
             win();
         } else if (hero.getState() == Creature.STATE_UPGRADE) {
-            choiseMenu.showMenu(weaponsPool);
+            choiseMenu.showMenu(weaponsPool, hero);
             if (choiseMenu.isWeaponSelected()) {
                 choiseMenu.hide();
                 hero.setState(Creature.STATE_ALIVE);
