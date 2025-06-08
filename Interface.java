@@ -12,8 +12,9 @@ public class Interface extends Actor {
         this.fpsCounter = fpsCounter;
         img = new GreenfootImage(
                 "Health: " + hero.getHealth() + "/" + hero.getHealthMax()
-                + "\nFPS: " + fpsCounter.getFPS()
-                + "\nFTM: " + fpsCounter.getFrameTimeMillis(),
+                        + "\nLVL: " + hero.getLvl() + "  EXP: " + hero.getExp() + "/" + hero.getNextLvlXp()
+                        + "\nFPS: " + fpsCounter.getFPS()
+                        + "\nFTM: " + fpsCounter.getFrameTimeMillis(),
                 18, Color.RED, Color.BLACK);
         setImage(Const.NOTHING);
     }
@@ -21,6 +22,7 @@ public class Interface extends Actor {
     public void update() {
         img = new GreenfootImage(
                         "Health: " + hero.getHealth() + "/" + hero.getHealthMax()
+                        + "\nLVL: " + hero.getLvl() + "  EXP: " + hero.getExp() + "/" + hero.getNextLvlXp()
                         + "\nFPS: " + fpsCounter.getFPS()
                         + "\nFTM: " + fpsCounter.getFrameTimeMillis(),
                 18, Color.RED, Color.BLACK);

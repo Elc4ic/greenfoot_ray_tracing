@@ -2,21 +2,20 @@ import java.io.IOException;
 import java.util.Arrays;
 
 public class Creature extends ObjFile {
-    private float gravity;
     static final int STATE_DEAD = 0;
     static final int STATE_ALIVE = 1;
     static final int STATE_DAMAGE = 2;
     static final int STATE_HEAL = 3;
+    static final int STATE_UPGRADE = 4;
 
     private int health = 100;
-    private final int healthMax = 100;
-    int state = STATE_ALIVE;
+    private int healthMax = 100;
+
+    private int state = STATE_ALIVE;
     private int step = 1;
     private float speedX = 0;
     private float speedZ = 0;
-    private float speedY = 0;
-    private boolean onGround = true;
-    private final float speedMaxXZ = 1f;
+    private float speedMaxXZ = 1;
     private final float speedMaxY = 1.6f;
     private final DVector collisionResistance = new DVector();
     private boolean bulletCollisionEnabled = true;
@@ -25,12 +24,18 @@ public class Creature extends ObjFile {
         super(pos, rot, scale, objFile, textureIndex);
     }
 
+    public Creature(float[] pos, float[] rot, float scale, String objFile, int textureIndex, int health) throws IOException {
+        super(pos, rot, scale, objFile, textureIndex);
+        this.healthMax = health;
+        this.health = health;
+    }
+
     public boolean update() {
         WorldBase world = WorldBase.getInstance();
-        gravity = world.getGRAVITY();
-        checkCollision(world);
-        updatePosition();
+        updateHorizontalPosition();
+        applyGravity();
         updateState();
+        checkCollision(world);
         return state == STATE_DEAD;
     }
 
@@ -38,9 +43,8 @@ public class Creature extends ObjFile {
         collisionResistance.clear();
 
         for (WorldObject o : world.getObjects()) {
-
             if (o.haveCollision(getPos(), getCollisionR())) {
-                handleCollision(o);
+                doOnCollision(o, world);
 
 //                float[] normal = o.getNormal(getPos(), hitBoxRadius);
 //                collisionResistance.setAdsMax(normal);
@@ -49,43 +53,33 @@ public class Creature extends ObjFile {
         }
     }
 
-    private void handleCollision(WorldObject o) {
-        if (o instanceof Projectile projectile && bulletCollisionEnabled) {
-
+    private void doOnCollision(WorldObject o, WorldBase world) {
+        if (this instanceof Hero hero && o instanceof Experience exp) {
+            hero.addExp(exp.getExp());
+            world.deleteObject(exp);
+        } else if (o instanceof Projectile projectile && bulletCollisionEnabled) {
+            applyDamage(-projectile.getDamage());
             if (projectile instanceof Missile missile) {
-                applyDamage(-missile.getDamage());
                 missile.addPenetration();
-                addToPos(Vector3.scale(missile.getNormal(), -missile.getRepulsion()));
-            }///лучше перегрузить метод в колизии!? наверное
+                addToPos(missile.getRepulsion());
+            } else {
+                addToPos(Vector3.scale(getDirection(), -1));
+            }
         }
     }
 
-    private void updatePosition() {
-        if (speedX == 0 && speedY == 0 && speedZ == 0 || state == STATE_DEAD) return;
+    private void updateHorizontalPosition() {
+        if (speedX == 0 && speedZ == 0 || state == STATE_DEAD) return;
 
         float[] XOffset = Vector3.resist(Vector3.scale(getDirection(), speedX), collisionResistance);
         float[] direction = getDirection();
         Vector3.rotateY(direction, 90);
         float[] ZOffset = Vector3.resist(Vector3.scale(direction, speedZ), collisionResistance);
-        float[] YOffset = Vector3.scale(new float[]{0, 1, 0}, speedY);
 
         addToPos(XOffset);
         addToPos(ZOffset);
-        addToPos(YOffset);
 
-        applyGravity();
         applyFriction();
-    }
-
-    private void applyGravity() {
-        if (getPos()[1] > 1f) {
-            speedY -= gravity;
-        } else {
-            float y = getPos()[1];
-            addToPos(new float[]{0, -y, 0});
-            onGround = true;
-            speedY = 0;
-        }
     }
 
     private void applyFriction() {
@@ -114,16 +108,16 @@ public class Creature extends ObjFile {
     }
 
     public void jump() {
-        if (!onGround) return;
-        speedY = speedMaxY;
-        onGround = false;
-    }
-
-    void rotateXn(float angle) {
-        addToRotation(new float[]{0, -angle, 0});
+        if (!isOnGround()) return;
+        setSpeedY(speedMaxY);
+        setOnGround(false);
     }
 
     void rotateYn(float angle) {
+        addToRotation(new float[]{0, -angle, 0});
+    }
+
+    void rotateXn(float angle) {
         addToRotation(new float[]{-angle, 0, 0});
     }
 
@@ -165,10 +159,6 @@ public class Creature extends ObjFile {
         return speedX;
     }
 
-    public float getSpeedY() {
-        return speedY;
-    }
-
     public float getSpeedZ() {
         return speedZ;
     }
@@ -181,12 +171,16 @@ public class Creature extends ObjFile {
         this.speedZ = speedZ;
     }
 
-    public void setSpeedY(float speedY) {
-        this.speedY = speedY;
-    }
-
     public void setBulletCollisionEnabled(boolean bulletCollisionEnabled) {
         this.bulletCollisionEnabled = bulletCollisionEnabled;
+    }
+
+    public void setState(int state) {
+        this.state = state;
+    }
+
+    public int getState() {
+        return state;
     }
 }
 

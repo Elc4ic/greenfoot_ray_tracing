@@ -3,30 +3,43 @@ import greenfoot.*;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 import java.util.stream.IntStream;
 
 
 public class TheWorld extends World {
 
-
     private final Camera camera = new Camera(90);
     private final Hero hero = new Hero(new float[]{0, 0, 0}, new float[]{0, 0, 0}, 0.5f, 2);
-    private final TextureCollection textureCollection = TextureCollection.getInstance();
     private WorldBase worldBase;
+    private StartMenu startMenu;
+    private Random rand = new Random();
 
     private final Timer timer = new Timer(Const.TICK_RATE);
     private final FPSCounter fPSCounter = new FPSCounter();
     private final Interface interface1 = new Interface(hero, fPSCounter);
     private final Inventory inventory = new Inventory(hero);
+    private final Weapon[] weaponsPool = {
+            new RJ45(hero),
+            new WiFi(hero),
+            new MidTower(hero),
+            new OpticFiber(hero),
+            new Disk(hero),
+            new KeyBoard(hero),
+            new PaperPen(hero),
+            new Scooter(hero),
+            new Virus(hero)
+    };
+    private final ChoisePlate cp1 = new ChoisePlate(hero);
+    private final ChoisePlate cp2 = new ChoisePlate(hero);
+    private final ChoisePlate cp3 = new ChoisePlate(hero);
+    private final ChoiseMenu choiseMenu = new ChoiseMenu(cp1, cp2, cp3);
+
+
     GreenfootImage frame = new GreenfootImage(Const.WIDTH, Const.HEIGHT);
-    Kernel rasterizer;
 
     private final List<Triangle> trianglesList = new ArrayList<>();
     private final List<Triangle> tfc_trianglesList = new ArrayList<>();
-
-    private float[] triangles;
-    private int[] texture;
-    private int[] textureSizes;
 
     private final float[] depth_buffer = new float[Const.PICXELS];
     private final int[] output = new int[Const.HEIGHT * Const.WIDTH];
@@ -34,34 +47,22 @@ public class TheWorld extends World {
     public TheWorld() throws IOException {
         super(Const.WIDTH, Const.HEIGHT, 1);
 
-        Texture mapTexture = new Texture("images\\map.png", "map");
-        Texture bTexture = new Texture("images\\badan.png", "albedo");
-        Texture orbTexture = new Texture("images\\orb.png", "orb");
-        Texture bulletTexture = new Texture("images\\bullet.png", "bullet");
-        Texture enemyTexture = new Texture("images\\enemy.png", "enemy");
-        Texture wallTexture = new Texture("images\\wall.png", "wall");
-        Texture portalTexture = new Texture("images\\portal.png", "portal");
-        Texture wtTexture = new Texture("images\\wifi_texture.png", "wifi_texture");
-
-        textureCollection.addTexture(mapTexture);
-        textureCollection.addTexture(bTexture);
-        textureCollection.addTexture(orbTexture);
-        textureCollection.addTexture(bulletTexture);
-        textureCollection.addTexture(enemyTexture);
-        textureCollection.addTexture(wallTexture);
-        textureCollection.addTexture(portalTexture);
-        textureCollection.addTexture(wtTexture);
-
-        texture = textureCollection.initTextureBuff();
+        startMenu = new StartMenu();
+        addObject(startMenu, Const.WIDTH / 2, Const.HEIGHT / 2);
+        startMenu.showMainMenu();
 
         worldBase = WorldBase.initInstance(hero);
         addObject(interface1, interface1.getImg().getWidth() / 2, Const.HEIGHT - interface1.getImg().getHeight() / 2);
-        addObject(inventory, 20, 20);
+        addObject(inventory, 100, 40);
         addObject(timer, Const.WIDTH / 2, 20);
+        addObject(choiseMenu, Const.WIDTH / 2, Const.HEIGHT / 2);
+        addObject(cp1, Const.WIDTH / 2, Const.HEIGHT / 2);
+        addObject(cp2, Const.WIDTH / 2 - 110, Const.HEIGHT / 2);
+        addObject(cp3, Const.WIDTH / 2 + 110, Const.HEIGHT / 2);
 
-        hero.addWeapon(new WiFi(hero));
-        hero.addWeapon(new RJ45(hero));
-        loadScreen();
+        hero.addWeapon(weaponsPool[rand.nextInt(weaponsPool.length)]);
+
+        setBackground(worldBase.getLoadScreen());
         initWorld();
     }
 
@@ -70,32 +71,43 @@ public class TheWorld extends World {
         System.gc();
     }
 
-    public void loadScreen() {
-        setBackground(worldBase.getLoadScreen());
-    }
-
     public void act() {
-        if (hero.state == 0) {
+        if (startMenu != null && startMenu.isActive()) {
+            return;
+        }
+        if (hero.getState() == Creature.STATE_DEAD) {
             lose();
         } else if (timer.getTime() >= Const.WIN_TIME) {
             win();
+        } else if (hero.getState() == Creature.STATE_UPGRADE) {
+            choiseMenu.showMenu(weaponsPool, hero);
+            if (choiseMenu.isWeaponSelected()) {
+                choiseMenu.hide();
+                hero.setState(Creature.STATE_ALIVE);
+            }
         } else {
 
             if (worldBase.needUpdateBuffers) {
                 initWorld();
             }
-            render();
+            if (worldBase.needLoadScreen) {
+                setBackground(worldBase.getLoadScreen());
+                Greenfoot.delay(400);
+                worldBase.needLoadScreen = false;
+            } else {
+                render();
 
-            if (timer.update()) {
-                try {
-                    worldBase.update();
-                } catch (IOException e) {
-                    throw new RuntimeException(e);
+                if (timer.update()) {
+                    try {
+                        worldBase.update();
+                    } catch (IOException e) {
+                        throw new RuntimeException(e);
+                    }
+                    hero.updateHero();
+                    camera.bindToHero(hero);
+                    interface1.update();
+                    inventory.update();
                 }
-                hero.updateHero();
-                camera.bindToHero(hero);
-                interface1.update();
-                inventory.update();
             }
         }
         fPSCounter.update();
@@ -114,57 +126,23 @@ public class TheWorld extends World {
     }
 
     private void render() {
-        tfc_trianglesList.clear();
-
-        trianglesList.forEach(
-                t -> tfc_trianglesList.addAll(t.transform(worldBase.getObjects()).flat(camera).clip())
-        );
-
-        initTriangles(tfc_trianglesList);
-
         IntStream.range(0, Const.PICXELS).forEach(i -> {
             depth_buffer[i] = Float.MAX_VALUE;
             output[i] = 0xffffffff;
         });
-
-        Range range = Range.create(triangles.length / Triangle.SIZE);
-
-        rasterizer = new RasterizerKernel(
-                triangles,
-                textureSizes, texture,
-                output, depth_buffer,
-                Const.WIDTH, Const.HEIGHT
+        tfc_trianglesList.clear();
+        trianglesList.forEach(
+                t -> tfc_trianglesList.addAll(t.transform(worldBase.getObjects()).flat(camera).clip())
         );
+        tfc_trianglesList.forEach(t -> t.rasterize(depth_buffer, output));
 
-        rasterizer.setExecutionModeWithoutFallback(Kernel.EXECUTION_MODE.JTP);
-        rasterizer.setExplicit(true);
-
-        rasterizer.put(triangles);
-        rasterizer.put(camera.getPos());
-        rasterizer.put(camera.getRotations());
-        rasterizer.put(textureSizes);
-        rasterizer.put(texture);
-        rasterizer.put(depth_buffer);
-
-        rasterizer.execute(range);
-        rasterizer.get(output);
         for (int y = 0; y < Const.HEIGHT; y++) {
             for (int x = 0; x < Const.WIDTH; x++) {
                 frame.setColorAt(x, y, ColorOperation.IntToGColor(output[y * Const.WIDTH + x]));
             }
         }
 
-        rasterizer.dispose();
-
         setBackground(frame);
-    }
-
-    private void initTriangles(List<Triangle> trianglesList) {
-        textureSizes = textureCollection.getTextureSizes(trianglesList);
-        triangles = new float[trianglesList.size() * Triangle.SIZE];
-        for (int i = 0; i < trianglesList.size(); i++) {
-            System.arraycopy(trianglesList.get(i).toFloatArray(), 0, triangles, i * Triangle.SIZE, Triangle.SIZE);
-        }
     }
 
     void lose() {

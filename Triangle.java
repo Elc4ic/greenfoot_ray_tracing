@@ -151,4 +151,80 @@ public class Triangle {
                 a[4]
         };
     }
+
+    public void rasterize(float[] depth_buffer, int[] output) {
+        Texture txt = TextureCollection.getInstance().getTexture(textureIndex);
+        int[] texture = txt.textureBuff;
+        int txt_w = txt.textureWidth;
+        int txt_h = txt.textureHeight;
+
+        float v0x = v1[0];
+        float v0y = v1[1];
+        float v0z = v1[2];
+        float tv0u = v1[3];
+        float tv0v = v1[4];
+
+        float v1x = v2[0];
+        float v1y = v2[1];
+        float v1z = v2[2];
+        float tv1u = v2[3];
+        float tv1v = v2[4];
+
+        float v2x = v3[0];
+        float v2y = v3[1];
+        float v2z = v3[2];
+        float tv2u = v3[3];
+        float tv2v = v3[4];
+
+        int minX = (int) Math.max(0, Math.min(v0x, Math.min(v1x, v2x)));
+        int maxX = (int) Math.min(Const.WIDTH - 1, Math.max(v0x, Math.max(v1x, v2x)));
+        int minY = (int) Math.max(0, Math.min(v0y, Math.min(v1y, v2y)));
+        int maxY = (int) Math.min(Const.HEIGHT - 1, Math.max(v0y, Math.max(v1y, v2y)));
+
+        float denom = (v1y - v2y) * (v0x - v2x) + (v2x - v1x) * (v0y - v2y);
+
+        if (Math.abs(denom) > Const.EPSILON) {
+
+            float u0 = tv0u / v0z;
+            float u1 = tv1u / v1z;
+            float u2 = tv2u / v2z;
+
+            float v0_ = tv0v / v0z;
+            float v1_ = tv1v / v1z;
+            float v2_ = tv2v / v2z;
+
+            float oneOverZ0 = 1f / v0z;
+            float oneOverZ1 = 1f / v1z;
+            float oneOverZ2 = 1f / v2z;
+
+            for (int y = minY; y <= maxY; y++) {
+                for (int x = minX; x <= maxX; x++) {
+
+                    float bu = ((v1y - v2y) * (x - v2x) + (v2x - v1x) * (y - v2y)) / denom;
+                    float bv = ((v2y - v0y) * (x - v2x) + (v0x - v2x) * (y - v2y)) / denom;
+                    float bw = 1f - bu - bv;
+
+                    if (bu >= 0 && bv >= 0 && bw >= 0) {
+                        float z = bu * v0z + bv * v1z + bw * v2z;
+                        if (z < depth_buffer[x + y * Const.WIDTH]) {
+                            depth_buffer[x + y * Const.WIDTH] = z;
+
+                            float oneOverZ = bu * oneOverZ0 + bv * oneOverZ1 + bw * oneOverZ2;
+                            float u = (bu * u0 + bv * u1 + bw * u2) / oneOverZ;
+                            float v = (bu * v0_ + bv * v1_ + bw * v2_) / oneOverZ;
+
+                            int txtX = Math.min(txt_w - 1, Math.max(0, (int) (u * txt_w)));
+                            int txtY = Math.min(txt_h - 1, Math.max(0, (int) (v * txt_h)));
+
+                            int color = texture[txtY * txt_w + txtX];
+                            if ((color & 0xFF000000) != 0) {
+                                output[x + y * Const.WIDTH] = color;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+    }
 }

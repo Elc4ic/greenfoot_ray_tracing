@@ -2,8 +2,8 @@ import java.io.IOException;
 
 public abstract class Projectile extends ObjFile {
 
-    public Projectile(float[] pos, float scale,String filePath, int textureIndex) throws IOException {
-        super(pos, new float[]{0, 0, 0}, scale, filePath, textureIndex);
+    public Projectile(float[] pos, float[] rot, float scale, String filePath, int textureIndex) throws IOException {
+        super(pos, rot, scale, filePath, textureIndex);
     }
 
     public abstract boolean update();

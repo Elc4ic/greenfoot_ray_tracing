@@ -1,22 +1,34 @@
 public abstract class WorldObject {
     private float[] rotation;
     private float[] position;
-    private final float collisionR = 0.5f;
+    private float collisionR = 0.5f;
 
-//    private float speedX = 0;
-//    private float speedZ = 0;
-//    private float speedY = 0;
-//    private boolean onGround = true;
-//    private final float speedMaxXZ = 1f;
-//    private final float speedMaxY = 1.6f;
-//    private final DVector collisionResistance = new DVector();
+    private float gravity = 0.3f;
+    private float speedY = 0;
+    private boolean onGround = true;
 
-    WorldObject(float[] position,float[] rotation) {
+    WorldObject(float[] position, float[] rotation) {
         this.position = position;
         this.rotation = rotation;
     }
 
     public abstract boolean update();
+
+    public void applyGravity() {
+        if (speedY == 0) return;
+        float[] YOffset = Vector3.scale(new float[]{0, 1, 0}, speedY);
+
+        addToPos(YOffset);
+
+        if (getPos()[1] > 0) {
+            speedY -= gravity;
+        } else {
+            float y = getPos()[1];
+            addToPos(new float[]{0, -y, 0});
+            onGround = true;
+            speedY = 0;
+        }
+    }
 
     public boolean haveCollision(float[] pos, float r) {
         return getDistance(pos) < collisionR + r;
@@ -38,6 +50,10 @@ public abstract class WorldObject {
         return collisionR;
     }
 
+    public void setCollisionR(float collisionR) {
+        this.collisionR = collisionR;
+    }
+
     public float[] getPos() {
         return position;
     }
@@ -48,7 +64,7 @@ public abstract class WorldObject {
 
     public float[] getDirection() {
         float[] direction = {0, 0, 1};
-        Vector3.rotateZr(direction, rotation[2]);
+//        Vector3.rotateZr(direction, rotation[2]);
         Vector3.rotateYr(direction, rotation[1]);
         Vector3.rotateXr(direction, rotation[0]);
         return direction;
@@ -71,5 +87,25 @@ public abstract class WorldObject {
 
     public void addToPos(float[] pos) {
         this.position = Vector3.add(this.position, pos);
+    }
+
+    public float getGravity() {
+        return gravity;
+    }
+
+    public void setGravity(float gravity) {
+        this.gravity = gravity;
+    }
+
+    public void setSpeedY(float speedY) {
+        this.speedY = speedY;
+    }
+
+    public boolean isOnGround() {
+        return onGround;
+    }
+
+    public void setOnGround(boolean onGround) {
+        this.onGround = onGround;
     }
 }

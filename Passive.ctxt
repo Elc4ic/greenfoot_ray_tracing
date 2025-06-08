@@ -1,0 +1,9 @@
+#BlueJ class context
+comment0.target=Passive
+comment1.params=name\ effect
+comment1.target=Passive(java.lang.String,\ java.lang.Runnable)
+comment2.params=
+comment2.target=void\ act()
+comment3.params=
+comment3.target=java.lang.Runnable\ getEffect()
+numComments=4
