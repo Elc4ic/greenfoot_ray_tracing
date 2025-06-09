@@ -81,19 +81,18 @@ public class Triangle {
         float yzY = dy * camera.cosX() - xzZ * camera.sinX();
         float z = dy * camera.sinX() + xzZ * camera.cosX();
 
+        z = Math.max(0.1f, z);
+
         float x = xzX * camera.cosZ() - yzY * camera.sinZ();
         float y = xzX * camera.sinZ() + yzY * camera.cosZ();
 
-        if (z < Const.EPSILON) z = Const.EPSILON;
+        float invZ = 1f / z;
 
-        float px = (x / z) * camera.fov;
-        float py = (y / z) * camera.fov;
+        float px = (x * invZ) * camera.fov;
+        float py = (y * invZ) * camera.fov;
 
-        int screenX = (int) ((px + 1) * Const.WIDTH * 0.5f);
-        int screenY = (int) ((1 - py) * Const.HEIGHT * 0.5f);
-
-        screenX = Math.max(0, Math.min(Const.WIDTH - 1, screenX));
-        screenY = Math.max(0, Math.min(Const.HEIGHT - 1, screenY));
+        int screenX = Math.round((px + 1f) * 0.5f * Const.WIDTH);
+        int screenY = Math.round((1f - py) * 0.5f * Const.HEIGHT);
 
         return new float[]{screenX, screenY, z, v[3], v[4]};
     }
@@ -133,23 +132,26 @@ public class Triangle {
     }
 
     private static float[] interpolate(float[] a, float[] b, float nearZ) {
-        float invZa = 1f / a[2];
-        float invZb = 1f / b[2];
-        float ua = a[3] * invZa;
-        float ub = b[3] * invZb;
-        float va = a[4] * invZa;
-        float vb = b[4] * invZb;
+        float za = a[2];
+        float zb = b[2];
+        float t = (nearZ - za) / (zb - za);
 
-        float t = (nearZ - a[2]) / (b[2] - a[2]);
-        float u_interp = (ua + (ub - ua) * t) / (invZa + (invZb - invZa) * t);
-        float v_interp = (va + (vb - va) * t) / (invZa + (invZb - invZa) * t);
-        return new float[]{
-                a[0] + (b[0] - a[0]) * t,
-                a[1] + (b[1] - a[1]) * t,
-                nearZ,
-                a[3],
-                a[4]
-        };
+        float invZa = 1f / za;
+        float invZb = 1f / zb;
+        float invZ_interp = invZa + (invZb - invZa) * t;
+
+        float ua = a[3];
+        float ub = b[3];
+        float va = a[4];
+        float vb = b[4];
+
+        float u_interp = ((ua / za) + t * ((ub / zb) - (ua / za))) / invZ_interp;
+        float v_interp = ((va / za) + t * ((vb / zb) - (va / za))) / invZ_interp;
+
+        float x = a[0] + (b[0] - a[0]) * t;
+        float y = a[1] + (b[1] - a[1]) * t;
+
+        return new float[]{x, y, nearZ, u_interp, v_interp};
     }
 
     public void rasterize(float[] depth_buffer, int[] output) {

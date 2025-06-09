@@ -1,6 +1,3 @@
-
-import com.aparapi.Kernel;
-import com.aparapi.Range;
 import greenfoot.*;
 
 import java.io.IOException;

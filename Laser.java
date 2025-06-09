@@ -13,6 +13,6 @@ public class Laser extends Flash {
         float hypotenuseLength = Vector3.length(hypotenuse);
         float angle = (float) Math.acos(Vector3.dot(direction, hypotenuse) / (Vector3.length(direction) * hypotenuseLength));
         float R = (float) (hypotenuseLength * Math.sin(angle));
-        return R < r && angle < Math.PI / 6;
+        return R < r;
     }
 }
