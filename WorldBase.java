@@ -57,7 +57,7 @@ public class WorldBase {
     private final ArrayList<WorldObject> objects = new ArrayList<>();
     private final Stack<WorldObject> objectsOnDestroy = new Stack<>();
     private final Stack<WorldObject> objectsOnAdd = new Stack<>();
-    private final int maxMaxEnemy = 300;
+    private final int maxMaxEnemy = 150;
     private int maxEnemy = 2;
     private int enemyCounter = 0;
     private Random r = new Random();
@@ -72,6 +72,7 @@ public class WorldBase {
             if (o instanceof Hero) continue;
             if (o instanceof Enemy enemy && enemy.update()) enemy.destroy(this);
             if (o instanceof Projectile projectile && projectile.update()) projectile.destroy(this);
+//            if (o instanceof Experience exp) exp.unite(this);
             if (r.nextInt(100) == 1) addEnemy();
         }
         while (!objectsOnAdd.empty()) {
@@ -89,12 +90,17 @@ public class WorldBase {
     public void addEnemy() throws IOException {
         if (enemyCounter >= maxEnemy) return;
         needUpdateBuffers = true;
-        float enemyFactor = r.nextFloat();
+        float enemyFactor = r.nextFloat() / 3f + 0.5f;
         String enemyModel = enemiesModel.get(r.nextInt(enemiesModel.size()));
+        float angle = r.nextFloat() * Const.PI * 2f;
+        float radius = 14f + r.nextFloat() * 20f;
+
+        float x = hero.getPos()[0] + (float) Math.cos(angle) * radius;
+        float z = hero.getPos()[2] + (float) Math.sin(angle) * radius;
         objectsOnAdd.add(new Enemy(
-                        new float[]{hero.getPos()[0] + r.nextInt(60) - 30, 0, hero.getPos()[2] + r.nextInt(60) - 30},
+                        new float[]{x, 0, z},
                         new float[]{0, 0, 0},
-                        2f * enemyFactor,
+                        enemyFactor,
                         hero,
                         enemyModel,
                         TextureCollection.getInstance().getIndex("enemy"),
@@ -107,7 +113,9 @@ public class WorldBase {
     public void deleteObject(WorldObject o) {
         if (o instanceof Enemy) {
             enemyCounter--;
-            maxEnemy++;
+            if (maxEnemy < maxMaxEnemy) {
+                maxEnemy++;
+            }
         }
         needUpdateBuffers = true;
         objectsOnDestroy.add(o);

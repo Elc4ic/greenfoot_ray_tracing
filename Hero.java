@@ -28,7 +28,6 @@ public class Hero extends Creature {
         control();
         updateWeapons();
         update();
-
     }
 
 
@@ -93,21 +92,24 @@ public class Hero extends Creature {
     public float getDmgMult() {
         return dmgMult;
     }
-    public void incDmg(float val){
+
+    public void incDmg(float val) {
         dmgMult += val;
     }
 
     public float getAsMult() {
         return asMult;
     }
-    public void incAS(float val){
+
+    public void incAS(float val) {
         asMult -= val;
     }
 
     public int getBonusProj() {
         return bonusProj;
     }
-    public void incProj(int val){
+
+    public void incProj(int val) {
         bonusProj += val;
     }
 
@@ -116,7 +118,7 @@ public class Hero extends Creature {
         if (exp >= nextLvlXp) {
             setState(Creature.STATE_UPGRADE);
             lvl++;
-            nextLvlXp = nextLvlXp * 2;
+            nextLvlXp = Math.round(nextLvlXp * 1.3f) + 4;
         }
     }
 }

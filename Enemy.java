@@ -1,14 +1,14 @@
 import java.io.IOException;
 import java.util.Random;
-import java.util.Stack;
 
 public class Enemy extends Creature {
     float attackRadius = 1;
     int damage = 4;
     Hero hero;
+    Random r = new Random();
 
-    public Enemy(float[] pos, float[] rot, float scale, Hero hero,String model, int textureIndex,int health) throws IOException {
-        super(pos, rot, scale, model, textureIndex,health);
+    public Enemy(float[] pos, float[] rot, float scale, Hero hero, String model, int textureIndex, int health) throws IOException {
+        super(pos, rot, scale, model, textureIndex, health);
         this.hero = hero;
         setCollisionR(scale);
     }
@@ -28,14 +28,19 @@ public class Enemy extends Creature {
 
     void attackByRange() {
         if (hero.getDistance(getPos()) < attackRadius) {
-            hero.applyDamage(-damage);
+            hero.changeHealth(-damage);
         }
     }
 
     void destroy(WorldBase worldBase) {
         try {
-            Experience exp = new Experience(getPos(), 1);
-            worldBase.addObject(exp);
+            if (r.nextInt(200) != 1) {
+                Experience exp = new Experience(getPos(), 1);
+                worldBase.addObject(exp);
+            } else {
+                AidKid aidKid = new AidKid(getPos());
+                worldBase.addObject(aidKid);
+            }
         } catch (IOException e) {
             throw new RuntimeException(e);
         }

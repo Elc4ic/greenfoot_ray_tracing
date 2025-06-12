@@ -15,8 +15,8 @@ public class Creature extends ObjFile {
     private int step = 1;
     private float speedX = 0;
     private float speedZ = 0;
-    private float speedMaxXZ = 1;
-    private final float speedMaxY = 1.6f;
+    private float speedMaxXZ = 0.7f;
+    private final float speedMaxY = 1.2f;
     private final DVector collisionResistance = new DVector();
     private boolean bulletCollisionEnabled = true;
 
@@ -54,11 +54,17 @@ public class Creature extends ObjFile {
     }
 
     private void doOnCollision(WorldObject o, WorldBase world) {
-        if (this instanceof Hero hero && o instanceof Experience exp) {
-            hero.addExp(exp.getExp());
-            world.deleteObject(exp);
+        if (this instanceof Hero hero) {
+            if (o instanceof Experience exp) {
+                hero.addExp(exp.getExp());
+                world.deleteObject(exp);
+            }
+            if (o instanceof AidKid aidKid) {
+                hero.changeHealth(aidKid.getHeal());
+                world.deleteObject(aidKid);
+            }
         } else if (o instanceof Projectile projectile && bulletCollisionEnabled) {
-            applyDamage(-projectile.getDamage());
+            changeHealth(-projectile.getDamage());
             if (projectile instanceof Missile missile) {
                 missile.addPenetration();
                 addToPos(missile.getRepulsion());
@@ -142,12 +148,13 @@ public class Creature extends ObjFile {
         return health;
     }
 
-    public void applyDamage(int deltaHealth) {
+    public void changeHealth(int deltaHealth) {
         health += deltaHealth;
         if (health <= 0) {
             state = STATE_DEAD;
             return;
         }
+        if (health > healthMax) health = healthMax;
         state = (deltaHealth < 0) ? STATE_DAMAGE : STATE_HEAL;
     }
 

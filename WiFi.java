@@ -32,7 +32,7 @@ public class WiFi extends Weapon {
         for (WorldObject o : WorldBase.getInstance().getObjects()) {
             if (o instanceof Enemy enemy && o.getDistance(getHero().getPos()) <= radius) {
                 if (o.haveCollision(field.getPos(), radius)) {
-                    enemy.applyDamage(-(int) getDMG(damage));
+                    enemy.changeHealth(-(int) getDMG(damage));
                     enemy.addToPos(Vector3.scale(field.getNormal(enemy.getPos()), repulsion));
                 }
             }
