@@ -66,14 +66,6 @@ public class Vector3 {
         return new float[]{v[0] / magnitude, v[1] / magnitude, v[2] / magnitude};
     }
 
-    public static float[] resist(float[] v, DVector v2) {
-        return new float[]{
-                (v[0] < 0) ? v[0] * (1 - Math.abs(v2.pos_v[0])) : v[0] * (1 - Math.abs(v2.neg_v[0])),
-                0,
-                (v[2] < 0) ? v[2] * (1 - Math.abs(v2.pos_v[2])) : v[2] * (1 - Math.abs(v2.neg_v[2]))
-        };
-    }
-
     static void clear(float[] v) {
         v[0] = 0;
         v[1] = 0;

@@ -3,10 +3,10 @@ import java.util.Random;
 
 /// Оружие Корпус Mid-Tower - спавнит снаряды, которые падают и взрываются
 public class MidTower extends Weapon {
-    private float damage = 30f;
-    private float radius = 0.5f;
-    private float xOffset = 12f;
-    private float zOffset = 12f;
+    private float damage = 50f;
+    private float radius = 0.7f;
+    private float xOffset = 16f;
+    private float zOffset = 16f;
     private int projectileCount = 3;
     private long fireInterval = 3 * Const.SECOND;
 
@@ -44,8 +44,8 @@ public class MidTower extends Weapon {
     public void upgrade() {
         lvlUp();
         projectileCount++;
-        radius *= 1.2f;
-        damage *= 1.4f;
-        fireInterval -= 200 * Const.MILLI;
+        radius *= 0.05f;
+        damage *= 1.3f;
+        fireInterval -= 120 * Const.MILLI;
     }
 }

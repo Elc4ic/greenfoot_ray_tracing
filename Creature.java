@@ -16,8 +16,7 @@ public class Creature extends ObjFile {
     private float speedX = 0;
     private float speedZ = 0;
     private float speedMaxXZ = 0.7f;
-    private final float speedMaxY = 1.2f;
-    private final DVector collisionResistance = new DVector();
+    private final float speedMaxY = 1.7f;
     private boolean bulletCollisionEnabled = true;
 
     public Creature(float[] pos, float[] rot, float scale, String objFile, int textureIndex) throws IOException {
@@ -40,15 +39,9 @@ public class Creature extends ObjFile {
     }
 
     void checkCollision(WorldBase world) {
-        collisionResistance.clear();
-
         for (WorldObject o : world.getObjects()) {
             if (o.haveCollision(getPos(), getCollisionR())) {
                 doOnCollision(o, world);
-
-//                float[] normal = o.getNormal(getPos(), hitBoxRadius);
-//                collisionResistance.setAdsMax(normal);
-
             }
         }
     }
@@ -71,16 +64,22 @@ public class Creature extends ObjFile {
             } else {
                 addToPos(Vector3.scale(getDirection(), -1));
             }
+        } else if (this instanceof Enemy && o instanceof Enemy) {
+            float[] dif = Vector3.subtract(getPos(), o.getPos());
+            float len = Vector3.length(dif);
+            if (len < getCollisionR() * 2) {
+                addToPos(Vector3.scale(dif, 1 - len / getCollisionR() / 2));
+            }
         }
     }
 
     private void updateHorizontalPosition() {
         if (speedX == 0 && speedZ == 0 || state == STATE_DEAD) return;
 
-        float[] XOffset = Vector3.resist(Vector3.scale(getDirection(), speedX), collisionResistance);
+        float[] XOffset = Vector3.scale(getDirection(), speedX);
         float[] direction = getDirection();
         Vector3.rotateY(direction, 90);
-        float[] ZOffset = Vector3.resist(Vector3.scale(direction, speedZ), collisionResistance);
+        float[] ZOffset = Vector3.scale(direction, speedZ);
 
         addToPos(XOffset);
         addToPos(ZOffset);
@@ -188,32 +187,5 @@ public class Creature extends ObjFile {
 
     public int getState() {
         return state;
-    }
-}
-
-class DVector {
-    float[] pos_v = new float[]{0, 0, 0};
-    float[] neg_v = new float[]{0, 0, 0};
-
-    void clear() {
-        Arrays.fill(pos_v, 0);
-        Arrays.fill(neg_v, 0);
-    }
-
-    void setAdsMax(float[] v) {
-        pos_v[0] = Math.max(pos_v[0], Math.max(0, v[0]));
-        neg_v[0] = Math.min(neg_v[0], Math.min(0, v[0]));
-        pos_v[1] = Math.max(pos_v[1], Math.max(0, v[1]));
-        neg_v[1] = Math.min(neg_v[1], Math.min(0, v[1]));
-        pos_v[2] = Math.max(pos_v[2], Math.max(0, v[2]));
-        neg_v[2] = Math.min(neg_v[2], Math.min(0, v[2]));
-    }
-
-    float[] getTotalResistance() {
-        return new float[]{
-                pos_v[0] + neg_v[0],
-                pos_v[1] + neg_v[1],
-                pos_v[2] + neg_v[2]
-        };
     }
 }

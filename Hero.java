@@ -12,7 +12,7 @@ public class Hero extends Creature {
     private float dmgMult = 1.0f;
     private float asMult = 1.0f;
     private int bonusProj = 0;
-
+    private Enemy nearestEnemy = null;
 
     private List<Weapon> weapons = new ArrayList<>();
 
@@ -120,5 +120,13 @@ public class Hero extends Creature {
             lvl++;
             nextLvlXp = Math.round(nextLvlXp * 1.3f) + 4;
         }
+    }
+
+    public Enemy getNearestEnemy() {
+        return nearestEnemy;
+    }
+
+    public void setNearestEnemy(Enemy nearestEnemy) {
+        this.nearestEnemy = nearestEnemy;
     }
 }

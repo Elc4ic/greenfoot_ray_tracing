@@ -57,7 +57,7 @@ public class StartMenu extends Actor {
             if (startButton == null) {
                 startButton = new Button("START", 200, 60, () -> {
                     deactivate();
-                    world.removeObject(this);
+                    setImage(Const.NOTHING);
                 });
                 addButton(startButton);
             }

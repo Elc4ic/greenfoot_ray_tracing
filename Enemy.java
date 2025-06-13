@@ -34,7 +34,7 @@ public class Enemy extends Creature {
 
     void destroy(WorldBase worldBase) {
         try {
-            if (r.nextInt(200) != 1) {
+            if (r.nextInt(145) != 1) {
                 Experience exp = new Experience(getPos(), 1);
                 worldBase.addObject(exp);
             } else {

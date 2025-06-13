@@ -23,7 +23,7 @@ public class Timer extends Actor {
     public boolean update() {
         this.oldFrameTimeMillis = this.newFrameTimeMillis;
         this.newFrameTimeMillis = System.nanoTime();
-        long frame = newFrameTimeMillis - oldFrameTimeMillis;
+        long frame = Math.min(newFrameTimeMillis - oldFrameTimeMillis, Const.SECOND);
         time = Math.max(time + frame, 0);
         dT += frame;
         if (dT >= dt) {
@@ -32,6 +32,10 @@ public class Timer extends Actor {
         } else {
             return false;
         }
+    }
+
+    public void reset() {
+        this.time = 0;
     }
 
     public void addTime(long time) {

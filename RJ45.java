@@ -21,7 +21,7 @@ public class RJ45 extends Weapon {
         WorldBase world = WorldBase.getInstance();
 
         try {
-            Enemy enemy = getNearestEnemy(world.getObjects());
+            Enemy enemy = getHero().getNearestEnemy();
             if (enemy == null) return;
             float[] n = getHero().getNormal(enemy.getPos());
             Missile pc = new Missile(
@@ -41,21 +41,6 @@ public class RJ45 extends Weapon {
             projectileFired = 0;
             setLastFireTime(System.nanoTime());
         }
-    }
-
-    public Enemy getNearestEnemy(List<WorldObject> objs) {
-        float minDistance = Float.MAX_VALUE;
-        Enemy nearest = null;
-        for (WorldObject o : objs) {
-            if (o instanceof Enemy enemy) {
-                float distance = o.getDistance(getHero().getPos());
-                if (distance < minDistance) {
-                    minDistance = distance;
-                    nearest = enemy;
-                }
-            }
-        }
-        return nearest;
     }
 
     @Override
