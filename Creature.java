@@ -15,9 +15,8 @@ public class Creature extends ObjFile {
     private int step = 1;
     private float speedX = 0;
     private float speedZ = 0;
-    private float speedMaxXZ = 1;
-    private final float speedMaxY = 1.6f;
-    private final DVector collisionResistance = new DVector();
+    private float speedMaxXZ = 0.7f;
+    private final float speedMaxY = 1.7f;
     private boolean bulletCollisionEnabled = true;
 
     public Creature(float[] pos, float[] rot, float scale, String objFile, int textureIndex) throws IOException {
@@ -40,30 +39,36 @@ public class Creature extends ObjFile {
     }
 
     void checkCollision(WorldBase world) {
-        collisionResistance.clear();
-
         for (WorldObject o : world.getObjects()) {
             if (o.haveCollision(getPos(), getCollisionR())) {
                 doOnCollision(o, world);
-
-//                float[] normal = o.getNormal(getPos(), hitBoxRadius);
-//                collisionResistance.setAdsMax(normal);
-
             }
         }
     }
 
     private void doOnCollision(WorldObject o, WorldBase world) {
-        if (this instanceof Hero hero && o instanceof Experience exp) {
-            hero.addExp(exp.getExp());
-            world.deleteObject(exp);
+        if (this instanceof Hero hero) {
+            if (o instanceof Experience exp) {
+                hero.addExp(exp.getExp());
+                world.deleteObject(exp);
+            }
+            if (o instanceof AidKid aidKid) {
+                hero.changeHealth(aidKid.getHeal());
+                world.deleteObject(aidKid);
+            }
         } else if (o instanceof Projectile projectile && bulletCollisionEnabled) {
-            applyDamage(-projectile.getDamage());
+            changeHealth(-projectile.getDamage());
             if (projectile instanceof Missile missile) {
                 missile.addPenetration();
                 addToPos(missile.getRepulsion());
             } else {
                 addToPos(Vector3.scale(getDirection(), -1));
+            }
+        } else if (this instanceof Enemy && o instanceof Enemy) {
+            float[] dif = Vector3.subtract(getPos(), o.getPos());
+            float len = Vector3.length(dif);
+            if (len < getCollisionR() * 2) {
+                addToPos(Vector3.scale(dif, 1 - len / getCollisionR() / 2));
             }
         }
     }
@@ -71,10 +76,10 @@ public class Creature extends ObjFile {
     private void updateHorizontalPosition() {
         if (speedX == 0 && speedZ == 0 || state == STATE_DEAD) return;
 
-        float[] XOffset = Vector3.resist(Vector3.scale(getDirection(), speedX), collisionResistance);
+        float[] XOffset = Vector3.scale(getDirection(), speedX);
         float[] direction = getDirection();
         Vector3.rotateY(direction, 90);
-        float[] ZOffset = Vector3.resist(Vector3.scale(direction, speedZ), collisionResistance);
+        float[] ZOffset = Vector3.scale(direction, speedZ);
 
         addToPos(XOffset);
         addToPos(ZOffset);
@@ -142,12 +147,13 @@ public class Creature extends ObjFile {
         return health;
     }
 
-    public void applyDamage(int deltaHealth) {
+    public void changeHealth(int deltaHealth) {
         health += deltaHealth;
         if (health <= 0) {
             state = STATE_DEAD;
             return;
         }
+        if (health > healthMax) health = healthMax;
         state = (deltaHealth < 0) ? STATE_DAMAGE : STATE_HEAL;
     }
 
@@ -181,32 +187,5 @@ public class Creature extends ObjFile {
 
     public int getState() {
         return state;
-    }
-}
-
-class DVector {
-    float[] pos_v = new float[]{0, 0, 0};
-    float[] neg_v = new float[]{0, 0, 0};
-
-    void clear() {
-        Arrays.fill(pos_v, 0);
-        Arrays.fill(neg_v, 0);
-    }
-
-    void setAdsMax(float[] v) {
-        pos_v[0] = Math.max(pos_v[0], Math.max(0, v[0]));
-        neg_v[0] = Math.min(neg_v[0], Math.min(0, v[0]));
-        pos_v[1] = Math.max(pos_v[1], Math.max(0, v[1]));
-        neg_v[1] = Math.min(neg_v[1], Math.min(0, v[1]));
-        pos_v[2] = Math.max(pos_v[2], Math.max(0, v[2]));
-        neg_v[2] = Math.min(neg_v[2], Math.min(0, v[2]));
-    }
-
-    float[] getTotalResistance() {
-        return new float[]{
-                pos_v[0] + neg_v[0],
-                pos_v[1] + neg_v[1],
-                pos_v[2] + neg_v[2]
-        };
     }
 }

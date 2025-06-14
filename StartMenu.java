@@ -57,7 +57,7 @@ public class StartMenu extends Actor {
             if (startButton == null) {
                 startButton = new Button("START", 200, 60, () -> {
                     deactivate();
-                    world.removeObject(this);
+                    setImage(Const.NOTHING);
                 });
                 addButton(startButton);
             }
@@ -91,7 +91,7 @@ public class StartMenu extends Actor {
                 "2. Перемещайте мышку чтобы осматриваться",
                 "3. Убивайте врагов и собирайте опыт",
                 "4. Повышайте уровень и усиливайтесь",
-                "5. Проживите как можно дольше",
+                "5. Проживите 15 минут для победы",
                 "",
                 "Удачи!"
         };

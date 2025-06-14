@@ -3,7 +3,7 @@ import java.io.IOException;
 public class Scooter extends Weapon {
     private long fireInterval = 20 * Const.SECOND;
     private float speed = 0.6f;
-    private float damage = 50f;
+    private float damage = 32f;
 
     public Scooter(Hero hero) {
         super(hero, "images\\scooter.png", "models\\scooter.obj", "Scooter");
@@ -15,7 +15,15 @@ public class Scooter extends Weapon {
 
         WorldBase world = WorldBase.getInstance();
         try {
-            Satellite scooter = new Satellite(getHero(), getHero().getPos(), getHero().getRotation(), 0.08f, (int) getDMG(damage), getProjectileModel(), TextureCollection.getInstance().getIndex("portal"));
+            Satellite scooter = new Satellite(
+                    getHero(),
+                    getHero().getPos(),
+                    getHero().getRotation(),
+                    0.08f,
+                    (int) getDMG(damage),
+                    getProjectileModel(),
+                    TextureCollection.getInstance().getIndex("portal")
+            );
             scooter.setMovementFunction((a, b, c) -> {
                 a.addToPos(Vector3.scale(a.getDirection(), speed));
                 return a.getPos();

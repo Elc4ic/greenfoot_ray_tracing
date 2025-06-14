@@ -9,31 +9,21 @@ import java.util.stream.IntStream;
 
 public class TheWorld extends World {
 
-    private final Camera camera = new Camera(90);
-    private final Hero hero = new Hero(new float[]{0, 0, 0}, new float[]{0, 0, 0}, 0.5f, 2);
+    private Camera camera = new Camera(90);
+    private Hero hero;
     private WorldBase worldBase;
     private StartMenu startMenu;
     private Random rand = new Random();
 
     private final Timer timer = new Timer(Const.TICK_RATE);
     private final FPSCounter fPSCounter = new FPSCounter();
-    private final Interface interface1 = new Interface(hero, fPSCounter);
-    private final Inventory inventory = new Inventory(hero);
-    private final Weapon[] weaponsPool = {
-            new RJ45(hero),
-            new WiFi(hero),
-            new MidTower(hero),
-            new OpticFiber(hero),
-            new Disk(hero),
-            new KeyBoard(hero),
-            new PaperPen(hero),
-            new Scooter(hero),
-            new Virus(hero)
-    };
-    private final ChoisePlate cp1 = new ChoisePlate(hero);
-    private final ChoisePlate cp2 = new ChoisePlate(hero);
-    private final ChoisePlate cp3 = new ChoisePlate(hero);
-    private final ChoiseMenu choiseMenu = new ChoiseMenu(cp1, cp2, cp3);
+    private Interface interface1;
+    private Inventory inventory;
+    private Weapon[] weaponsPool;
+    private ChoisePlate cp1;
+    private ChoisePlate cp2;
+    private ChoisePlate cp3;
+    private ChoiseMenu choiseMenu;
 
 
     GreenfootImage frame = new GreenfootImage(Const.WIDTH, Const.HEIGHT);
@@ -47,11 +37,30 @@ public class TheWorld extends World {
     public TheWorld() throws IOException {
         super(Const.WIDTH, Const.HEIGHT, 1);
 
+        hero = new Hero(new float[]{0, 0, 0}, new float[]{0, 0, 0}, 0.5f, 2);
+        interface1 = new Interface(hero, fPSCounter);
+        inventory = new Inventory(hero);
+        weaponsPool = new Weapon[]{
+                new RJ45(hero),
+                new WiFi(hero),
+                new MidTower(hero),
+                new OpticFiber(hero),
+                new Disk(hero),
+                new KeyBoard(hero),
+                new PaperPen(hero),
+                new Scooter(hero),
+                new Virus(hero)
+        };
+        cp1 = new ChoisePlate(hero);
+        cp2 = new ChoisePlate(hero);
+        cp3 = new ChoisePlate(hero);
+        choiseMenu = new ChoiseMenu(cp1, cp2, cp3);
+
         startMenu = new StartMenu();
         addObject(startMenu, Const.WIDTH / 2, Const.HEIGHT / 2);
         startMenu.showMainMenu();
 
-        worldBase = WorldBase.initInstance(hero);
+        worldBase = WorldBase.initReset(hero);
         addObject(interface1, interface1.getImg().getWidth() / 2, Const.HEIGHT - interface1.getImg().getHeight() / 2);
         addObject(inventory, 100, 40);
         addObject(timer, Const.WIDTH / 2, 20);
@@ -61,8 +70,6 @@ public class TheWorld extends World {
         addObject(cp3, Const.WIDTH / 2 + 110, Const.HEIGHT / 2);
 
         hero.addWeapon(weaponsPool[rand.nextInt(weaponsPool.length)]);
-
-        setBackground(worldBase.getLoadScreen());
         initWorld();
     }
 
@@ -77,8 +84,14 @@ public class TheWorld extends World {
         }
         if (hero.getState() == Creature.STATE_DEAD) {
             lose();
+            Greenfoot.delay(1000);
+            startMenu.showMainMenu();
+            timer.reset();
         } else if (timer.getTime() >= Const.WIN_TIME) {
             win();
+            Greenfoot.delay(2000);
+            startMenu.showMainMenu();
+            timer.reset();
         } else if (hero.getState() == Creature.STATE_UPGRADE) {
             choiseMenu.showMenu(weaponsPool, hero);
             if (choiseMenu.isWeaponSelected()) {
@@ -86,7 +99,6 @@ public class TheWorld extends World {
                 hero.setState(Creature.STATE_ALIVE);
             }
         } else {
-
             if (worldBase.needUpdateBuffers) {
                 initWorld();
             }

@@ -4,6 +4,7 @@ import java.util.List;
 
 public class Disk extends Weapon {
     private float damage = 14f;
+    private float rotSpeed = 6f;
     private int projectileCount = 2;
     private List<Satellite> disks = new ArrayList<>();
 
@@ -34,7 +35,8 @@ public class Disk extends Weapon {
     @Override
     public void upgrade() {
         lvlUp();
-        damage *= 1.2f;
+        damage *= 1.3f;
+        rotSpeed += 1;
         projectileCount++;
     }
 
@@ -44,7 +46,7 @@ public class Disk extends Weapon {
                 getProjectileModel(),
                 TextureCollection.getInstance().getIndex("disk_texture")
         );
-        disk.setRotSpeed(new float[]{0, 6, 0});
+        disk.setRotSpeed(new float[]{0, rotSpeed, 0});
         disk.setMovementFunction((a, b, c) -> {
             float[] unit = new float[]{0, 0, 3};
             Vector3.rotateYr(unit, c[1]);

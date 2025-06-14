@@ -8,11 +8,11 @@ public class Laser extends Flash {
 
     @Override
     public boolean haveCollision(float[] pos, float r) {
-        float[] hypotenuse = Vector3.minus(pos, getPos());
+        float[] hypotenuse = Vector3.minus(getPos(), pos);
         float[] direction = getDirection();
         float hypotenuseLength = Vector3.length(hypotenuse);
         float angle = (float) Math.acos(Vector3.dot(direction, hypotenuse) / (Vector3.length(direction) * hypotenuseLength));
         float R = (float) (hypotenuseLength * Math.sin(angle));
-        return R < r && angle < Math.PI / 6;
+        return R < r && angle < Math.PI / 2;
     }
 }
